@@ -34,6 +34,7 @@ from base.models.education_group import EducationGroup
 from base.models.education_group_type import EducationGroupType
 from base.models.education_group_year import EducationGroupYear
 from base.models.enums.education_group_categories import TRAINING, MINI_TRAINING, Categories
+from base.models.program_manager import is_program_manager
 from program_management.business.group_element_years import postponement, management
 
 ERRORS_MSG = {
@@ -44,29 +45,33 @@ ERRORS_MSG = {
 }
 
 
-def is_eligible_to_add_training(person, education_group, raise_exception=False):
-    return _is_eligible_to_add_education_group(person, education_group, Categories.TRAINING,
-                                               raise_exception=raise_exception)
+def is_eligible_to_add_training(person, education_group_yr, raise_exception=False):
+    return _is_eligible_to_add_education_group(
+        person, education_group_yr, Categories.TRAINING, raise_exception=raise_exception
+    )
 
 
-def is_eligible_to_add_mini_training(person, education_group, raise_exception=False):
-    return _is_eligible_to_add_education_group(person, education_group, Categories.MINI_TRAINING,
-                                               raise_exception=raise_exception)
+def is_eligible_to_add_mini_training(person, education_group_yr, raise_exception=False):
+    return _is_eligible_to_add_education_group(
+        person, education_group_yr, Categories.MINI_TRAINING, raise_exception=raise_exception
+    )
 
 
-def is_eligible_to_add_group(person, education_group, raise_exception=False):
-    return _is_eligible_to_add_education_group(person, education_group, Categories.GROUP,
-                                               raise_exception=raise_exception)
+def is_eligible_to_add_group(person, education_group_yr, raise_exception=False):
+    return _is_eligible_to_add_education_group(
+        person, education_group_yr, Categories.GROUP, raise_exception=raise_exception
+    )
 
 
-def _is_eligible_to_add_education_group(person, education_group, category, education_group_type=None,
+def _is_eligible_to_add_education_group(person, education_group_yr, category, education_group_type=None,
                                         raise_exception=False):
     return check_permission(person, "base.add_educationgroup", raise_exception) and \
-           _is_eligible_to_add_education_group_with_category(person, education_group, category, raise_exception) and \
-           _is_eligible_education_group(person, education_group, raise_exception) and \
-           (not management.is_max_child_reached(education_group, education_group_type.name)
-            if education_group_type and education_group
-            else check_authorized_type(education_group, category, raise_exception))
+           _is_eligible_to_add_education_group_with_category(person, education_group_yr, category, raise_exception) and\
+           _is_eligible_education_group(person, education_group_yr, raise_exception) and \
+           (not management.is_max_child_reached(education_group_yr, education_group_type.name)
+            if education_group_type and education_group_yr
+            else check_authorized_type(education_group_yr, category, raise_exception))
+
 
 
 def is_eligible_to_change_education_group(person, education_group, raise_exception=False):
@@ -75,14 +80,15 @@ def is_eligible_to_change_education_group(person, education_group, raise_excepti
            _is_year_editable(education_group, raise_exception)
 
 
-def is_eligible_to_change_education_group_content(person, education_group, raise_exception=False):
+
+def is_eligible_to_change_education_group_content(person, education_group_yr, raise_exception=False):
     return check_permission(person, "base.change_educationgroupcontent", raise_exception) and \
-        is_eligible_to_change_education_group(person, education_group, raise_exception)
+        is_eligible_to_change_education_group(person, education_group_yr, raise_exception)
 
 
-def _is_year_editable(education_group, raise_exception):
+def _is_year_editable(education_group_yr, raise_exception):
     error_msg = None
-    if education_group.academic_year.year < settings.YEAR_LIMIT_EDG_MODIFICATION:
+    if education_group_yr.academic_year.year < settings.YEAR_LIMIT_EDG_MODIFICATION:
         error_msg = _("You cannot change a education group before %(limit_year)s") % {
             "limit_year": settings.YEAR_LIMIT_EDG_MODIFICATION}
 
@@ -91,18 +97,18 @@ def _is_year_editable(education_group, raise_exception):
     return result
 
 
-def is_eligible_to_change_coorganization(person, education_group, raise_exception=False):
+def is_eligible_to_change_coorganization(person, education_group_yr, raise_exception=False):
     return check_permission(person, "base.change_educationgroup", raise_exception) and \
-           check_link_to_management_entity(education_group, person, raise_exception) and person.is_central_manager
+           check_link_to_management_entity(education_group_yr, person, raise_exception) and person.is_central_manager
 
 
-def is_eligible_to_postpone_education_group(person, education_group, raise_exception=False):
+def is_eligible_to_postpone_education_group(person, education_group_yr, raise_exception=False):
     result = check_permission(person, "base.change_educationgroup", raise_exception) and \
-             _is_eligible_education_group(person, education_group, raise_exception)
+             _is_eligible_education_group(person, education_group_yr, raise_exception)
 
     try:
         # Check if the education group is valid
-        postponement.PostponeContent(education_group.previous_year(), person)
+        postponement.PostponeContent(education_group_yr.previous_year(), person)
     except postponement.NotPostponeError as e:
         result = False
         if raise_exception:
@@ -110,46 +116,46 @@ def is_eligible_to_postpone_education_group(person, education_group, raise_excep
     return result
 
 
-def is_eligible_to_add_achievement(person, education_group, raise_exception=False):
+def is_eligible_to_add_achievement(person, education_group_yr, raise_exception=False):
     return check_permission(person, "base.add_educationgroupachievement", raise_exception) and \
-           check_link_to_management_entity(education_group, person, raise_exception)
+           check_link_to_management_entity(education_group_yr, person, raise_exception)
 
 
-def is_eligible_to_change_achievement(person, education_group, raise_exception=False):
+def is_eligible_to_change_achievement(person, education_group_yr, raise_exception=False):
     return check_permission(person, "base.change_educationgroupachievement", raise_exception) and \
-           check_link_to_management_entity(education_group, person, raise_exception)
+           check_link_to_management_entity(education_group_yr, person, raise_exception)
 
 
-def is_eligible_to_delete_achievement(person, education_group, raise_exception=False):
+def is_eligible_to_delete_achievement(person, education_group_yr, raise_exception=False):
     return check_permission(person, "base.delete_educationgroupachievement", raise_exception) and \
-           check_link_to_management_entity(education_group, person, raise_exception)
+           check_link_to_management_entity(education_group_yr, person, raise_exception)
 
 
-def is_eligible_to_delete_education_group(person, education_group, raise_exception=False):
+def is_eligible_to_delete_education_group(person, education_group_yr, raise_exception=False):
     return check_permission(person, "base.delete_educationgroup", raise_exception) and \
-           _is_eligible_education_group(person, education_group, raise_exception)
+           _is_eligible_education_group(person, education_group_yr, raise_exception)
 
 
 def is_eligible_to_delete_education_group_year(person, education_group_yr, raise_exception=False):
     return can_delete_all_education_group(person.user, education_group_yr.education_group)
 
 
-def _is_eligible_education_group(person, education_group, raise_exception):
+def _is_eligible_education_group(person, education_group_yr, raise_exception):
     return (
-        check_link_to_management_entity(education_group, person, raise_exception) and
+        check_link_to_management_entity(education_group_yr, person, raise_exception) and
         (
             person.is_central_manager or
-            EventPermEducationGroupEdition(obj=education_group, raise_exception=raise_exception).is_open()
+            EventPermEducationGroupEdition(obj=education_group_yr, raise_exception=raise_exception).is_open()
         )
     )
 
 
-def _is_eligible_to_add_education_group_with_category(person, education_group, category, raise_exception):
+def _is_eligible_to_add_education_group_with_category(person, education_group_yr, category, raise_exception):
     # TRAINING/MINI_TRAINING can only be added by central managers | Faculty manager must make a proposition of creation
     # based on US OSIS-2592, Faculty manager can add a MINI-TRAINING
     result = person.is_central_manager or (
             person.is_faculty_manager and (category == Categories.MINI_TRAINING or
-                                           (category == Categories.GROUP and education_group is not None))
+                                           (category == Categories.GROUP and education_group_yr is not None))
     )
 
     msg = pgettext(
@@ -162,12 +168,13 @@ def _is_eligible_to_add_education_group_with_category(person, education_group, c
     return result
 
 
-def check_link_to_management_entity(education_group, person, raise_exception):
-    if education_group:
-        if not hasattr(education_group, 'eligible_entities'):
-            education_group.eligible_entities = get_education_group_year_eligible_management_entities(education_group)
-
-        result = person.is_attached_entities(education_group.eligible_entities)
+def check_link_to_management_entity(education_group_yr, person, raise_exception):
+    if education_group_yr:
+        if not hasattr(education_group_yr, 'eligible_entities'):
+            education_group_yr.eligible_entities = get_education_group_year_eligible_management_entities(
+                education_group_yr
+            )
+        result = person.is_attached_entities(education_group_yr.eligible_entities)
     else:
         result = True
 
@@ -187,16 +194,16 @@ def can_raise_exception(raise_exception, result, msg):
         raise PermissionDenied(_(msg).capitalize())
 
 
-def check_authorized_type(education_group: EducationGroupYear, category, raise_exception=False):
-    if not education_group or not category:
+def check_authorized_type(education_group_yr: EducationGroupYear, category, raise_exception=False):
+    if not education_group_yr or not category:
         return True
 
     result = EducationGroupType.objects.filter(
         category=category.name,
-        authorized_child_type__parent_type__educationgroupyear=education_group
+        authorized_child_type__parent_type__educationgroupyear=education_group_yr
     ).exists()
 
-    parent_category = education_group.education_group_type.category
+    parent_category = education_group_yr.education_group_type.category
 
     can_raise_exception(
         raise_exception, result,
@@ -205,20 +212,20 @@ def check_authorized_type(education_group: EducationGroupYear, category, raise_e
             "No type of %(child_category)s can be created as child of %(category)s of type %(type)s")
         % {
             "child_category": category.value,
-            "category": education_group.education_group_type.get_category_display(),
-            "type": education_group.education_group_type.get_name_display(),
+            "category": education_group_yr.education_group_type.get_category_display(),
+            "type": education_group_yr.education_group_type.get_name_display(),
         }
     )
 
     return result
 
 
-def get_education_group_year_eligible_management_entities(education_group: EducationGroupYear):
-    if education_group and education_group.management_entity:
-        return [education_group.management_entity]
+def get_education_group_year_eligible_management_entities(education_group_yr: EducationGroupYear):
+    if education_group_yr and education_group_yr.management_entity:
+        return [education_group_yr.management_entity]
 
     eligible_entities = []
-    for group in education_group.child_branch.all().select_related('parent'):
+    for group in education_group_yr.child_branch.all().select_related('parent'):
         eligible_entities += get_education_group_year_eligible_management_entities(group.parent)
 
     return eligible_entities

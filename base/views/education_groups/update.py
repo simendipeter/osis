@@ -43,7 +43,6 @@ from base.forms.education_group.coorganization import OrganizationFormset
 from base.forms.education_group.group import GroupForm
 from base.forms.education_group.mini_training import MiniTrainingForm
 from base.forms.education_group.training import TrainingForm, CertificateAimsForm
-from base.models import program_manager
 from base.models.certificate_aim import CertificateAim
 from base.models.education_group_year import EducationGroupYear
 from base.models.enums import education_group_categories
@@ -244,7 +243,7 @@ def _update_training(request, education_group_year, root, groupelementyear_forms
         "show_diploma_tab": form_education_group_year.show_diploma_tab(),
         'can_change_coorganization': perms.is_eligible_to_change_coorganization(
             person=request.user.person,
-            education_group=education_group_year,
+            education_group_yr=education_group_year,
         ),
         'group_element_years': groupelementyear_formset
     })

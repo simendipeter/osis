@@ -177,11 +177,11 @@ class EducationGroupGenericDetailView(PermissionRequiredMixin, DetailView, Catal
         context['group_to_parent'] = self.request.GET.get("group_to_parent") or '0'
         context['can_change_education_group'] = perms.is_eligible_to_change_education_group(
             person=self.person,
-            education_group=context['object'],
+            education_group_yr=context['object'],
         )
         context['can_change_coorganization'] = perms.is_eligible_to_change_coorganization(
             person=self.person,
-            education_group=context['object'],
+            education_group_yr=context['object'],
         )
         context['enums'] = mdl.enums.education_group_categories
         context['current_academic_year'] = self.starting_academic_year
