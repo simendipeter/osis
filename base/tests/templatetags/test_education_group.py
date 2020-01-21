@@ -541,7 +541,7 @@ class TestEducationGroupUpdateTagAsProgramManager(TestCase):
         result = li_with_update_perm(self.context, self.url, "")
         self.assertEqual(
             result, {
-                'load_modal': True,
+                'load_modal': False,
                 'id_li': 'link_update',
                 'url': self.url,
                 'title': '',
