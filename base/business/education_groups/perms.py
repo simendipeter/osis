@@ -73,12 +73,18 @@ def _is_eligible_to_add_education_group(person, education_group_yr, category, ed
             else check_authorized_type(education_group_yr, category, raise_exception))
 
 
+def is_eligible_to_change_education_group(person, education_group_yr, raise_exception=False):
+    return is_education_group_program_manager(person, education_group_yr, raise_exception) or \
+           (check_permission(person, "base.change_educationgroup", raise_exception)
+            and _is_eligible_education_group(person, education_group_yr, raise_exception)
+            and _is_year_editable(education_group_yr, raise_exception))
 
-def is_eligible_to_change_education_group(person, education_group, raise_exception=False):
-    return check_permission(person, "base.change_educationgroup", raise_exception) and \
-           _is_eligible_education_group(person, education_group, raise_exception) and \
-           _is_year_editable(education_group, raise_exception)
 
+def is_education_group_program_manager(person, education_group_yr, raise_exception):
+    result = is_program_manager(person.user, education_group=education_group_yr.education_group)
+    error_msg = _('The user is not the program manager of the education group')
+    can_raise_exception(person.is_program_manager and raise_exception, result, error_msg)
+    return result
 
 
 def is_eligible_to_change_education_group_content(person, education_group_yr, raise_exception=False):
