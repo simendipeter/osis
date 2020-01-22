@@ -44,7 +44,7 @@ from base.tests.factories.academic_year import AcademicYearFactory
 from base.tests.factories.authorized_relationship import AuthorizedRelationshipFactory
 from base.tests.factories.education_group import EducationGroupFactory
 from base.tests.factories.education_group_year import TrainingFactory, EducationGroupYearFactory
-from base.tests.factories.person import FacultyManagerFactory, CentralManagerFactory
+from base.tests.factories.person import FacultyManagerFactory, CentralManagerFactory, ProgramManagerRoleFactory
 from base.tests.factories.person_entity import PersonEntityFactory
 from base.tests.factories.program_manager import ProgramManagerFactory
 
@@ -528,7 +528,11 @@ class TestEducationGroupUpdateTagAsProgramManager(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.training = TrainingFactory(academic_year__year=2018)
-        cls.program_manager = ProgramManagerFactory(education_group=cls.training.education_group)
+        cls.program_manager = ProgramManagerFactory(
+            person=ProgramManagerRoleFactory('change_educationgroup'),
+            education_group=cls.training.education_group
+        )
+        PersonEntityFactory(person=cls.program_manager.person, entity=cls.training.management_entity)
         cls.context = {
             'person': cls.program_manager.person,
             'root': cls.training,
@@ -551,7 +555,8 @@ class TestEducationGroupUpdateTagAsProgramManager(TestCase):
         )
 
     def test_is_program_manager_without_permission_to_edit_because_not_program_manager(self):
-        result = li_with_update_perm({**self.context, 'education_group_year': TrainingFactory()}, self.url, "")
+        other_training_in_entity = TrainingFactory(management_entity=self.training.management_entity)
+        result = li_with_update_perm({**self.context, 'education_group_year': other_training_in_entity}, self.url, "")
         self.assertEqual(
             result, {
                 'load_modal': False,
