@@ -33,7 +33,7 @@ from django.contrib.auth.models import Group, Permission
 
 from base import models as mdl
 from base.models.enums.groups import CENTRAL_MANAGER_GROUP, FACULTY_MANAGER_GROUP, SIC_GROUP, UE_FACULTY_MANAGER_GROUP, \
-    ADMINISTRATIVE_MANAGER_GROUP
+    ADMINISTRATIVE_MANAGER_GROUP, PROGRAM_MANAGER_GROUP
 from base.tests.factories.user import UserFactory
 
 
@@ -108,3 +108,8 @@ class SICFactory(PersonWithPermissionsFactory):
 class AdministrativeManagerFactory(PersonWithPermissionsFactory):
     def __init__(self, *permissions, **kwargs):
         super().__init__(*permissions, groups=(ADMINISTRATIVE_MANAGER_GROUP, ), **kwargs)
+
+
+class ProgramManagerRoleFactory(PersonWithPermissionsFactory):
+    def __init__(self, *permissions, **kwargs):
+        super().__init__(*permissions, groups=(PROGRAM_MANAGER_GROUP, ), **kwargs)

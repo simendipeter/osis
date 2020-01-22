@@ -43,7 +43,6 @@ from base.forms.education_group.coorganization import OrganizationFormset
 from base.forms.education_group.group import GroupForm
 from base.forms.education_group.mini_training import MiniTrainingForm
 from base.forms.education_group.training import TrainingForm, CertificateAimsForm
-from base.models import program_manager
 from base.models.certificate_aim import CertificateAim
 from base.models.education_group_year import EducationGroupYear
 from base.models.enums import education_group_categories
@@ -75,31 +74,12 @@ def update_education_group(request, root_id, education_group_year_id):
     # it will be used in the templates.
     education_group_year.root = root_id
 
-    if program_manager.is_program_manager(request.user, education_group=education_group_year.education_group) \
-       and not any((request.user.is_superuser, person.is_faculty_manager, person.is_central_manager)):
-        return _update_certificate_aims(request, root_id, education_group_year)
-
     groupelementyear_formset = GroupElementYearFormset(
         request.POST or None,
         prefix='group_element_year_formset',
         queryset=education_group_year.groupelementyear_set.all()
     )
     return _update_education_group_year(request, root_id, education_group_year, groupelementyear_formset)
-
-
-def _update_certificate_aims(request, root_id, education_group_year):
-    perms.is_eligible_to_edit_certificate_aims(request.user.person, education_group_year, raise_exception=True)
-
-    root = get_object_or_404(EducationGroupYear, pk=root_id)
-    form_certificate_aims = CertificateAimsForm(request.POST or None, instance=education_group_year)
-    if form_certificate_aims.is_valid():
-        url_redirect = _common_success_redirect(request, form_certificate_aims, root)
-        return JsonResponse({'success_url': url_redirect.url})
-
-    return render(request, "education_group/blocks/form/training_certificate.html", {
-        "education_group_year": education_group_year,
-        "form_certificate_aims": form_certificate_aims
-    })
 
 
 def _update_education_group_year(request, root_id, education_group_year, groupelementyear_formset):
@@ -248,7 +228,7 @@ def _update_training(request, education_group_year, root, groupelementyear_forms
         "show_diploma_tab": form_education_group_year.show_diploma_tab(),
         'can_change_coorganization': perms.is_eligible_to_change_coorganization(
             person=request.user.person,
-            education_group=education_group_year,
+            education_group_yr=education_group_year,
         ),
         'group_element_years': groupelementyear_formset
     })

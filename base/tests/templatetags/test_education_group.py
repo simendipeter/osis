@@ -26,6 +26,7 @@
 from datetime import timedelta
 
 import mock
+from django.contrib.auth.models import Permission
 from django.core.exceptions import FieldDoesNotExist
 from django.test import TestCase, RequestFactory
 from django.urls import reverse
@@ -529,6 +530,8 @@ class TestEducationGroupUpdateTagAsProgramManager(TestCase):
         super().setUpClass()
         cls.training = TrainingFactory(academic_year__year=2018)
         cls.program_manager = ProgramManagerFactory(education_group=cls.training.education_group)
+        cls.program_manager.person.user.user_permissions.add(Permission.objects.get(codename='change_educationgroup'))
+        PersonEntityFactory(person=cls.program_manager.person, entity=cls.training.management_entity)
         cls.context = {
             'person': cls.program_manager.person,
             'root': cls.training,
@@ -541,7 +544,7 @@ class TestEducationGroupUpdateTagAsProgramManager(TestCase):
         result = li_with_update_perm(self.context, self.url, "")
         self.assertEqual(
             result, {
-                'load_modal': True,
+                'load_modal': False,
                 'id_li': 'link_update',
                 'url': self.url,
                 'title': '',
@@ -551,7 +554,8 @@ class TestEducationGroupUpdateTagAsProgramManager(TestCase):
         )
 
     def test_is_program_manager_without_permission_to_edit_because_not_program_manager(self):
-        result = li_with_update_perm({**self.context, 'education_group_year': TrainingFactory()}, self.url, "")
+        other_training_in_entity = TrainingFactory(management_entity=self.training.management_entity)
+        result = li_with_update_perm({**self.context, 'education_group_year': other_training_in_entity}, self.url, "")
         self.assertEqual(
             result, {
                 'load_modal': False,

@@ -46,3 +46,7 @@ class ProgramManagerFactory(factory.django.DjangoModelFactory):
     person = factory.SubFactory(PersonFactory)
     offer_year = factory.SubFactory(OfferYearFactory)
     education_group = factory.SubFactory(EducationGroupFactory)
+
+    add_to_program_manager_group = factory.PostGeneration(
+        lambda obj, create, extracted, **kwargs: obj.person.user.groups.add(ProgramManagerGroupFactory())
+    )

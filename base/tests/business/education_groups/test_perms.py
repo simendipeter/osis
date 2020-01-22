@@ -34,7 +34,7 @@ from django.test import TestCase, override_settings
 from base.business.education_groups.perms import check_permission, \
     check_authorized_type, is_eligible_to_edit_general_information, is_eligible_to_edit_admission_condition, \
     GeneralInformationPerms, CommonEducationGroupStrategyPerms, AdmissionConditionPerms, \
-    _is_eligible_to_add_education_group_with_category, CertificateAimsPerms
+    _is_eligible_to_add_education_group_with_category, CertificateAimsPerms, is_eligible_to_change_education_group
 from base.models.academic_calendar import get_academic_calendar_by_date_and_reference_and_data_year
 from base.models.enums import academic_calendar_type
 from base.models.enums.academic_calendar_type import EDUCATION_GROUP_EDITION
@@ -45,7 +45,8 @@ from base.tests.factories.authorized_relationship import AuthorizedRelationshipF
 from base.tests.factories.education_group_year import EducationGroupYearFactory, \
     EducationGroupYearCommonBachelorFactory, TrainingFactory, MiniTrainingFactory, GroupFactory
 from base.tests.factories.person import PersonFactory, PersonWithPermissionsFactory, CentralManagerFactory, \
-    SICFactory, FacultyManagerFactory, UEFacultyManagerFactory, AdministrativeManagerFactory
+    SICFactory, FacultyManagerFactory, UEFacultyManagerFactory, AdministrativeManagerFactory, ProgramManagerRoleFactory
+from base.tests.factories.person_entity import PersonEntityFactory
 from base.tests.factories.program_manager import ProgramManagerFactory
 from base.tests.factories.user import UserFactory, SuperUserFactory
 
@@ -150,6 +151,29 @@ class TestPerms(TestCase):
             FacultyManagerFactory(),
             random.choice([EducationGroupYearFactory(), None]),
             Categories.TRAINING,
+            raise_exception=False
+        )
+        self.assertFalse(result)
+
+    @mock.patch('base.business.education_groups.perms._is_year_editable', return_value=True)
+    def test_program_manager_is_eligible_to_change_education_group(self, mock_year_editable):
+        education_group_year = EducationGroupYearFactory()
+        program_manager_link = ProgramManagerFactory(
+            person=ProgramManagerRoleFactory('change_educationgroup'),
+            education_group=education_group_year.education_group
+        )
+        PersonEntityFactory(person=program_manager_link.person, entity=education_group_year.management_entity)
+        result = is_eligible_to_change_education_group(
+            program_manager_link.person,
+            education_group_year,
+            raise_exception=False
+        )
+        self.assertTrue(result)
+
+    def test_program_manager_is_not_eligible_to_change_education_group(self):
+        result = is_eligible_to_change_education_group(
+            ProgramManagerRoleFactory(),
+            EducationGroupYearFactory(),
             raise_exception=False
         )
         self.assertFalse(result)

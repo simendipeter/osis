@@ -31,7 +31,7 @@ from unittest import mock
 from django.contrib.auth.models import Permission
 from django.contrib.messages import get_messages
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -1146,7 +1146,7 @@ class TestCertificateAimAutocomplete(TestCase):
 
 
 @override_flag('education_group_update', active=True)
-class TestCertificateAimView(TestCase):
+class TestUpdateAsProgramManager(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -1165,12 +1165,6 @@ class TestCertificateAimView(TestCase):
         })
         self.client.force_login(user=self.program_manager.person.user)
 
-    def test_user_not_logged(self):
-        self.client.logout()
-        response = self.client.get(self.url)
-
-        self.assertRedirects(response, "/login/?next={}".format(self.url))
-
     def test_user_is_not_program_manager_of_training(self):
         training_without_pgrm_manager = TrainingFactory(academic_year=self.academic_year)
         url = reverse("update_education_group", kwargs={
@@ -1180,30 +1174,3 @@ class TestCertificateAimView(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, HttpResponseForbidden.status_code)
         self.assertTemplateUsed(response, 'access_denied.html')
-
-    def test_use_certificate_aims_template(self):
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, HttpResponse.status_code)
-        self.assertTemplateUsed(response, "education_group/blocks/form/training_certificate.html")
-
-    def test_ensure_context_kwargs(self):
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, HttpResponse.status_code)
-        self.assertEqual(response.context['education_group_year'], self.training)
-        self.assertIsInstance(response.context['form_certificate_aims'], CertificateAimsForm)
-
-    @mock.patch('base.views.education_groups.update.CertificateAimsForm')
-    def test_post_method_ensure_data_is_correctly_save(self, mock_form):
-        mock_form.return_value.is_valid.return_value = True
-        mock_form.return_value.save.return_value = self.training
-
-        response = self.client.post(self.url, data={'dummy_key': 'dummy'})
-        excepted_url = reverse("education_group_read", args=[self.training.pk, self.training.pk])
-
-        self.assertEqual(response.status_code, HttpResponse.status_code)
-        self.assertJSONEqual(
-            str(response.content, encoding='utf8'),
-            {'success_url': excepted_url}
-        )
