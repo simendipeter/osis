@@ -37,15 +37,17 @@
         {% trans 'certificate aims'|capfirst as label_certificate_aims %}
         {% bootstrap_label label_certificate_aims %}
 
-        <div class="row">
-            <div class="col-md-1">
-                {% trans 'filter by section'|capfirst as label_section %}
-                <p>{{ label_section }} : </p>
-
-                {% bootstrap_field form_education_group_year.section show_label=False %}
+        <div class="form-inline row">
+            <div class="col-lg-2">
+                <div class="col-lg-8 no-horizontal-padding">
+                    <label style="padding-top: 6px; font-weight: normal; margin-right: 10px;">{% trans 'filter by section'|capfirst %}</label>
+                </div>
+                <div class="col-lg-4 no-horizontal-padding">
+                    {% bootstrap_field form_education_group_year.section field_class="aims" show_label=False %}
+                </div>
             </div>
-            <div class="col-md-11">
-                {% bootstrap_field form_education_group_year.certificate_aims show_label=False %}
+            <div class="col-lg-10">
+                {% bootstrap_field form_education_group_year.certificate_aims form_group_class="aims form-group" show_label=False %}
             </div>
         </div>
 
