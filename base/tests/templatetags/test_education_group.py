@@ -26,6 +26,7 @@
 from datetime import timedelta
 
 import mock
+from django.contrib.auth.models import Permission
 from django.core.exceptions import FieldDoesNotExist
 from django.test import TestCase, RequestFactory
 from django.urls import reverse
@@ -44,7 +45,7 @@ from base.tests.factories.academic_year import AcademicYearFactory
 from base.tests.factories.authorized_relationship import AuthorizedRelationshipFactory
 from base.tests.factories.education_group import EducationGroupFactory
 from base.tests.factories.education_group_year import TrainingFactory, EducationGroupYearFactory
-from base.tests.factories.person import FacultyManagerFactory, CentralManagerFactory, ProgramManagerRoleFactory
+from base.tests.factories.person import FacultyManagerFactory, CentralManagerFactory
 from base.tests.factories.person_entity import PersonEntityFactory
 from base.tests.factories.program_manager import ProgramManagerFactory
 
@@ -528,10 +529,8 @@ class TestEducationGroupUpdateTagAsProgramManager(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.training = TrainingFactory(academic_year__year=2018)
-        cls.program_manager = ProgramManagerFactory(
-            person=ProgramManagerRoleFactory('change_educationgroup'),
-            education_group=cls.training.education_group
-        )
+        cls.program_manager = ProgramManagerFactory(education_group=cls.training.education_group)
+        cls.program_manager.person.user.user_permissions.add(Permission.objects.get(codename='change_educationgroup'))
         PersonEntityFactory(person=cls.program_manager.person, entity=cls.training.management_entity)
         cls.context = {
             'person': cls.program_manager.person,
