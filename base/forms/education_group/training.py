@@ -46,6 +46,7 @@ from base.models.enums import education_group_categories, rate_code, decree_cate
 from base.models.enums.education_group_categories import Categories
 from base.models.enums.education_group_types import TrainingType
 from base.models.hops import Hops
+from base.models.program_manager import is_program_manager
 from reference.models.domain import Domain
 from reference.models.enums import domain_type
 from reference.models.language import Language
@@ -209,6 +210,10 @@ class TrainingEducationGroupYearForm(EducationGroupYearModelForm):
         self.fields['rate_code'].choices = sorted(rate_code.RATE_CODE, key=lambda c: c[1])
         self.fields['main_domain'].queryset = Domain.objects.filter(type=domain_type.UNIVERSITY)\
                                                     .select_related('decree')
+
+        if is_program_manager(user=kwargs['user'], education_group=kwargs['instance'].education_group):
+            self.fields['certificate_aims'].disabled = False
+
         if not self.fields['certificate_aims'].disabled:
             self.fields['section'].disabled = False
 
