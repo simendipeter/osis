@@ -247,11 +247,6 @@ def is_eligible_to_edit_admission_condition(person, education_group_year, raise_
     return perm.is_eligible(raise_exception)
 
 
-def is_eligible_to_edit_certificate_aims(person, education_group_year, raise_exception=False):
-    perm = CertificateAimsPerms(person.user, education_group_year)
-    return perm.is_eligible(raise_exception)
-
-
 class CommonEducationGroupStrategyPerms(object):
     def __init__(self, user, education_group_year):
         self.user = user
