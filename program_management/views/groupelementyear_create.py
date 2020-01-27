@@ -46,6 +46,7 @@ from program_management.business.group_element_years.detach import DetachEducati
     DetachLearningUnitYearStrategy
 from program_management.business.group_element_years.management import fetch_elements_selected, fetch_source_link
 from program_management.forms.group_element_year import GroupElementYearForm, BaseGroupElementYearFormset
+from program_management.views import perms as group_element_year_perms
 from program_management.views.generic import GenericGroupElementYearMixin
 
 
@@ -119,6 +120,10 @@ class PasteElementFromCacheToSelectedTreeNode(GenericGroupElementYearMixin, Redi
 
 class CreateGroupElementYearView(GenericGroupElementYearMixin, CreateView):
     template_name = "group_element_year/group_element_year_comment_inner.html"
+    rules = [group_element_year_perms.can_attach_group_element_year]
+
+    def _call_rule(self, rule):
+        return rule(self.request.user, self.get_object())
 
     def get_form_class(self):
         elements_to_attach = fetch_elements_selected(self.request.GET, self.request.user)
@@ -179,6 +184,18 @@ class CreateGroupElementYearView(GenericGroupElementYearMixin, CreateView):
     def get_success_url(self):
         """ We'll reload the page """
         return
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            children = fetch_elements_selected(self.request.GET, self.request.user)
+            self.rules[0](self.request.user, self.education_group_year, children)
+        except PermissionDenied:
+            return render(request,
+                          'education_group/blocks/modal/modal_access_denied.html',
+                          {'access_message': _('You are not eligible to attach the element selected')})
+
+        return super(AttachCheckView).dispatch(request, *args, **kwargs)
 
 
 class MoveGroupElementYearView(CreateGroupElementYearView):

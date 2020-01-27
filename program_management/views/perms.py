@@ -27,6 +27,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 
 from base.models import person
+from base.models.group_element_year import GroupElementYear
 from program_management.business.group_element_years import perms as business_perms
 
 
@@ -44,4 +45,16 @@ def can_detach_group_element_year(user, group_element_year, raise_exception=Fals
     pers = get_object_or_404(person.Person, user=user)
     if not business_perms.is_eligible_to_detach_group_element_year(pers, group_element_year, raise_exception):
         raise PermissionDenied
+    return True
+
+
+def can_attach_group_element_year(user, education_group_year, children, raise_exception=False):
+    pers = get_object_or_404(person.Person, user=user)
+    for child in children:
+        group_element_year = GroupElementYear(parent=education_group_year, child_branch=child)
+        is_eligible = business_perms.is_eligible_to_update_group_element_year_content(
+            pers, group_element_year, raise_exception=raise_exception
+        )
+        if not is_eligible:
+            raise PermissionDenied
     return True
