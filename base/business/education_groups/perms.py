@@ -150,7 +150,8 @@ def _is_eligible_education_group(person, education_group_yr, raise_exception):
 
 
 def _is_education_group_program_manager(person, education_group_yr, raise_exception):
-    result = is_program_manager(person.user, education_group=education_group_yr.education_group)
+    result = hasattr(education_group_yr, 'education_group') and \
+             is_program_manager(person.user, education_group=education_group_yr.education_group)
     error_msg = _('The user is not the program manager of the education group')
     can_raise_exception(person.is_program_manager and raise_exception, result, error_msg)
     return result

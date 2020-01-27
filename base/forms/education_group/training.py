@@ -23,6 +23,7 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
+
 from ajax_select import register, LookupChannel
 from ajax_select.fields import AutoCompleteSelectMultipleField
 from dal import autocomplete
@@ -211,7 +212,8 @@ class TrainingEducationGroupYearForm(EducationGroupYearModelForm):
         self.fields['main_domain'].queryset = Domain.objects.filter(type=domain_type.UNIVERSITY)\
                                                     .select_related('decree')
 
-        if is_program_manager(user=kwargs['user'], education_group=kwargs['instance'].education_group):
+        if kwargs.get('instance') and \
+                is_program_manager(user=kwargs['user'], education_group=kwargs['instance'].education_group):
             self.fields['certificate_aims'].disabled = False
 
         if not self.fields['certificate_aims'].disabled:
@@ -315,9 +317,13 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        education_group_yr_hops = getattr(kwargs.pop('instance', None), 'hops', Hops())
-        self.hops_form = self.hops_form_class(data=args[0], user=kwargs['user'],
-                                              instance=education_group_yr_hops)
+        self.education_group_yr = kwargs.pop('instance', None)
+        education_group_yr_hops = getattr(self.education_group_yr, 'hops', Hops())
+        self.hops_form = self.hops_form_class(data=args[0], user=kwargs['user'], instance=education_group_yr_hops)
+        self.user = kwargs.pop('user', None)
+
+        if not self.show_identification_tab():
+            self.field = ['pub_date', 'headline', 'content', 'reporter']
 
     def _post_save(self):
         self.hops_form.save(education_group_year=self.education_group_year_form.instance)
@@ -332,6 +338,10 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
         }
 
     def is_valid(self):
+        for field in self.education_group_year_form.fields:
+            if self.education_group_year_form.fields[field].disabled:
+                self.education_group_year_form.fields[field].required = False
+                self.education_group_year_form.fields[field].validators = []
         return super(TrainingForm, self).is_valid() and self.hops_form.is_valid()
 
     @property
@@ -345,6 +355,19 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
         return any(
             not field.disabled for field_name, field
             in self.forms[forms.ModelForm].fields.items() if field_name in self.diploma_tab_fields
+        )
+
+    def show_identification_tab(self):
+        # TODO: show tab according to field reference
+        return not self.user.person.is_program_manager and self._is_eligible_as_program_manager()
+
+    def show_content_tab(self):
+        # TODO: show tab according to field reference
+        return not self.user.person.is_program_manager and self._is_eligible_as_program_manager()
+
+    def _is_eligible_as_program_manager(self):
+        return hasattr(self.education_group_yr, 'education_group') and not is_program_manager(
+            user=self.user, education_group=self.education_group_yr.education_group
         )
 
 

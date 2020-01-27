@@ -25,23 +25,26 @@
     * see http://www.gnu.org/licenses/.
 {% endcomment %}
 <ul class="nav nav-tabs" role="tablist">
+
+    {% if show_identification_tab %}
     <li role="presentation"
         {% if request.GET.tab_to_show == 'diplomas_certificates' and not show_diploma_tab or not request.GET.tab_to_show or request.GET.tab_to_show not in 'diplomas_certificates,content' %}class="active"{% endif %}>
         <a data-toggle="tab" href="#tab_identification" role="tab">
             {% trans 'Identification' %} <span id="spn_identification_errors" class="error"></span>
         </a>
     </li>
+    {% endif %}
 
     {% if show_diploma_tab %}
         <li role="presentation"
-            {% if request.GET.tab_to_show and request.GET.tab_to_show == 'diplomas_certificates' %}class="active"{% endif %}>
+            {% if request.GET.tab_to_show and request.GET.tab_to_show == 'diplomas_certificates' or not show_identification_tab %}class="active"{% endif %}>
             <a data-toggle="tab" href="#tab_diploma" role="tab" id="lnk_diplomas_certificats">
                 {% trans 'Diplomas /  Certificates' %} <span id="spn_diploma_errors" class="error"></span>
             </a>
         </li>
     {% endif %}
 
-    {% if education_group_year.pk and education_group_year.groupelementyear_set.count > 0 %}
+    {% if show_content_tab and education_group_year.pk and education_group_year.groupelementyear_set.count > 0 %}
         <li role="presentation"
             {% if request.GET.tab_to_show and request.GET.tab_to_show == 'content' %}class="active"{% endif %}>
             <a data-toggle="tab" href="#tab_content" role="tab" id="lnk_content">
@@ -52,6 +55,7 @@
 </ul>
 
 <div class="tab-content">
+    {% if show_identification_tab %}
     <div id="tab_identification"
          class="tab-pane {% if request.GET.tab_to_show == 'diplomas_certificates' and not show_diploma_tab or not request.GET.tab_to_show or request.GET.tab_to_show not in 'diplomas_certificates,content' %}active{% else %}fade{% endif %}">
         <div class="row">
@@ -197,16 +201,17 @@
             {% include 'education_group/blocks/coorganization_edit.html' %}
         {% endif %}
     </div>
+    {% endif %}
 
 
     {% if show_diploma_tab %}
         <div id="tab_diploma"
-             class="tab-pane {% if request.GET.tab_to_show and request.GET.tab_to_show == 'diplomas_certificates' %}active{% else %}fade{% endif %}">
+             class="tab-pane {% if request.GET.tab_to_show and request.GET.tab_to_show == 'diplomas_certificates' or not show_identification_tab %}active{% else %}fade{% endif %}">
             {% include "education_group/blocks/form/training_tab_diploma.html" %}
         </div>
     {% endif %}
 
-    {% if education_group_year.pk and education_group_year.groupelementyear_set.count > 0 %}
+    {% if show_content_tab and education_group_year.pk and education_group_year.groupelementyear_set.count > 0 %}
         <div id="tab_content"
              class="tab-pane {% if request.GET.tab_to_show and request.GET.tab_to_show == 'content' %}active{% else %}fade{% endif %}">
             {% include "education_group/blocks/form/training_tab_content.html" %}

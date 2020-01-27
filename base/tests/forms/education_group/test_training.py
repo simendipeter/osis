@@ -52,12 +52,13 @@ from base.tests.factories.education_group_organization import EducationGroupOrga
 from base.tests.factories.education_group_type import EducationGroupTypeFactory
 from base.tests.factories.education_group_year import TrainingFactory, EducationGroupYearFactory
 from base.tests.factories.education_group_year_domain import EducationGroupYearDomainFactory
-from base.tests.factories.entity_version import MainEntityVersionFactory
+from base.tests.factories.entity_version import MainEntityVersionFactory, EntityVersionFactory
 from base.tests.factories.group import GroupFactory
 from base.tests.factories.hops import HopsFactory
 from base.tests.factories.organization import OrganizationFactory
 from base.tests.factories.person import PersonFactory, CentralManagerFactory
 from base.tests.factories.person_entity import PersonEntityFactory
+from base.tests.factories.program_manager import ProgramManagerFactory
 from base.tests.forms.education_group.test_common import EducationGroupYearModelFormMixin
 from reference.tests.factories.domain import DomainFactory
 from reference.tests.factories.language import LanguageFactory
@@ -724,3 +725,37 @@ class TestPermissionField(TestCase):
             form.forms[forms.ModelForm].fields[field_name_in_diploma].disabled = True
 
         self.assertFalse(form.show_diploma_tab())
+
+    def test_ensure_show_identification_tab_is_hidden(self):
+        program_manager = ProgramManagerFactory()
+        person_entity = PersonEntityFactory(person=program_manager.person)
+        EntityVersionFactory(entity=person_entity.entity)
+        form = TrainingForm(
+            {},
+            user=program_manager.person.user,
+            education_group_type=self.education_group_type,
+            context=TRAINING_DAILY_MANAGEMENT,
+            instance=EducationGroupYearFactory(
+                education_group=program_manager.education_group,
+                management_entity=person_entity.entity,
+                administration_entity=person_entity.entity
+            )
+        )
+        self.assertFalse(form.show_identification_tab())
+
+    def test_ensure_show_content_tab_is_hidden(self):
+        program_manager = ProgramManagerFactory()
+        person_entity = PersonEntityFactory(person=program_manager.person)
+        EntityVersionFactory(entity=person_entity.entity)
+        form = TrainingForm(
+            {},
+            user=program_manager.person.user,
+            education_group_type=self.education_group_type,
+            context=TRAINING_DAILY_MANAGEMENT,
+            instance=EducationGroupYearFactory(
+                education_group=program_manager.education_group,
+                management_entity=person_entity.entity,
+                administration_entity=person_entity.entity
+            )
+        )
+        self.assertFalse(form.show_content_tab())
