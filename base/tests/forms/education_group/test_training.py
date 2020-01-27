@@ -52,17 +52,20 @@ from base.tests.factories.education_group_organization import EducationGroupOrga
 from base.tests.factories.education_group_type import EducationGroupTypeFactory
 from base.tests.factories.education_group_year import TrainingFactory, EducationGroupYearFactory
 from base.tests.factories.education_group_year_domain import EducationGroupYearDomainFactory
+from base.tests.factories.entity import EntityFactory
 from base.tests.factories.entity_version import MainEntityVersionFactory, EntityVersionFactory
-from base.tests.factories.group import GroupFactory
+from base.tests.factories.group import GroupFactory, ProgramManagerGroupFactory, CentralManagerGroupFactory, \
+    FacultyManagerGroupFactory
 from base.tests.factories.hops import HopsFactory
 from base.tests.factories.organization import OrganizationFactory
-from base.tests.factories.person import PersonFactory, CentralManagerFactory
+from base.tests.factories.person import PersonFactory, CentralManagerFactory, FacultyManagerFactory
 from base.tests.factories.person_entity import PersonEntityFactory
 from base.tests.factories.program_manager import ProgramManagerFactory
 from base.tests.forms.education_group.test_common import EducationGroupYearModelFormMixin
 from reference.tests.factories.domain import DomainFactory
 from reference.tests.factories.language import LanguageFactory
-from rules_management.enums import TRAINING_DAILY_MANAGEMENT, TRAINING_PGRM_ENCODING_PERIOD
+from rules_management.enums import TRAINING_DAILY_MANAGEMENT, TRAINING_PGRM_ENCODING_PERIOD, \
+    IDENTIFICATION_TAB_CATEGORY, DIPLOMA_TAB_CATEGORY
 from rules_management.tests.fatories import PermissionFactory, FieldReferenceFactory
 
 
@@ -654,6 +657,26 @@ class TestPermissionField(TestCase):
             permissions=cls.permissions,
         )
 
+        cls.identification_field_name = "acronym"
+        identification_field_reference = FieldReferenceFactory(
+                content_type=ContentType.objects.get(app_label="base", model="educationgroupyear"),
+                field_name=cls.identification_field_name,
+                context=TRAINING_DAILY_MANAGEMENT,
+                permissions=cls.permissions,
+                category=IDENTIFICATION_TAB_CATEGORY,
+        )
+        identification_field_reference.groups.add(CentralManagerGroupFactory(), FacultyManagerGroupFactory())
+
+        cls.diploma_field_name = "certificate_aims"
+        diploma_field_reference = FieldReferenceFactory(
+                content_type=ContentType.objects.get(app_label="base", model="educationgroupyear"),
+                field_name=cls.diploma_field_name,
+                context=TRAINING_DAILY_MANAGEMENT,
+                permissions=cls.permissions,
+                category=DIPLOMA_TAB_CATEGORY,
+        )
+        diploma_field_reference.groups.add(CentralManagerGroupFactory(), ProgramManagerGroupFactory())
+
         person = PersonFactory()
         cls.user_with_perm = person.user
         cls.user_with_perm.user_permissions.add(cls.permissions[2])
@@ -705,28 +728,38 @@ class TestPermissionField(TestCase):
             education_group_type=self.education_group_type,
             context=TRAINING_DAILY_MANAGEMENT,
         )
-        expected_fields = [
-            'joint_diploma', 'diploma_printing_title', 'professional_title',
-            'section', 'certificate_aims'
-        ]
+        expected_fields = [self.diploma_field_name]
         self.assertEqual(form.diploma_tab_fields, expected_fields)
 
-    def test_ensure_show_diploma_tab_is_hidden(self):
-        """
-        This test ensure that the show diploma property is False if all fields contains in tab are disabled
-        """
+    def test_ensure_identification_fields_property(self):
         form = TrainingForm(
             {},
-            user=self.user_without_perm,
+            user=self.user_with_perm,
             education_group_type=self.education_group_type,
             context=TRAINING_DAILY_MANAGEMENT,
         )
-        for field_name_in_diploma in form.diploma_tab_fields:
-            form.forms[forms.ModelForm].fields[field_name_in_diploma].disabled = True
+        expected_fields = [self.identification_field_name]
+        self.assertEqual(form.identification_tab_fields, expected_fields)
 
-        self.assertFalse(form.show_diploma_tab())
+    def test_ensure_central_manager_training_tabs(self):
+        central_manager = CentralManagerFactory()
+        person_entity = PersonEntityFactory(person=central_manager, entity=EntityFactory())
+        EntityVersionFactory(entity=person_entity.entity)
+        form = TrainingForm(
+            {},
+            user=central_manager.user,
+            education_group_type=self.education_group_type,
+            context=TRAINING_DAILY_MANAGEMENT,
+            instance=EducationGroupYearFactory(
+                management_entity=person_entity.entity,
+                administration_entity=person_entity.entity
+            )
+        )
+        self.assertTrue(form.show_identification_tab())
+        self.assertTrue(form.show_diploma_tab())
+        self.assertTrue(form.show_content_tab())
 
-    def test_ensure_show_identification_tab_is_hidden(self):
+    def test_ensure_program_manager_training_tabs(self):
         program_manager = ProgramManagerFactory()
         person_entity = PersonEntityFactory(person=program_manager.person)
         EntityVersionFactory(entity=person_entity.entity)
@@ -742,20 +775,23 @@ class TestPermissionField(TestCase):
             )
         )
         self.assertFalse(form.show_identification_tab())
+        self.assertTrue(form.show_diploma_tab())
+        self.assertFalse(form.show_content_tab())
 
-    def test_ensure_show_content_tab_is_hidden(self):
-        program_manager = ProgramManagerFactory()
-        person_entity = PersonEntityFactory(person=program_manager.person)
+    def test_ensure_faculty_manager_training_tabs(self):
+        faculty_manager = FacultyManagerFactory()
+        person_entity = PersonEntityFactory(person=faculty_manager, entity=EntityFactory())
         EntityVersionFactory(entity=person_entity.entity)
         form = TrainingForm(
             {},
-            user=program_manager.person.user,
+            user=faculty_manager.user,
             education_group_type=self.education_group_type,
             context=TRAINING_DAILY_MANAGEMENT,
             instance=EducationGroupYearFactory(
-                education_group=program_manager.education_group,
                 management_entity=person_entity.entity,
                 administration_entity=person_entity.entity
             )
         )
-        self.assertFalse(form.show_content_tab())
+        self.assertTrue(form.show_identification_tab())
+        self.assertFalse(form.show_diploma_tab())
+        self.assertTrue(form.show_content_tab())

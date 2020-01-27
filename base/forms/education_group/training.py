@@ -51,6 +51,8 @@ from base.models.program_manager import is_program_manager
 from reference.models.domain import Domain
 from reference.models.enums import domain_type
 from reference.models.language import Language
+from rules_management.enums import DIPLOMA_TAB_CATEGORY, IDENTIFICATION_TAB_CATEGORY
+from rules_management.models import FieldReference
 
 
 def _get_section_choices():
@@ -346,28 +348,34 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
 
     @property
     def diploma_tab_fields(self):
-        return [
-            'joint_diploma', 'diploma_printing_title', 'professional_title',
-            'section', 'certificate_aims'
-        ]
-
-    def show_diploma_tab(self):
-        return any(
-            not field.disabled for field_name, field
-            in self.forms[forms.ModelForm].fields.items() if field_name in self.diploma_tab_fields
+        return list(
+            FieldReference.objects.filter(
+                context="TRAINING_DAILY_MANAGEMENT", category=DIPLOMA_TAB_CATEGORY
+            ).values_list('field_name', flat=True)
         )
 
+    @property
+    def identification_tab_fields(self):
+        return list(
+            FieldReference.objects.filter(
+                context="TRAINING_DAILY_MANAGEMENT", category=IDENTIFICATION_TAB_CATEGORY
+            ).values_list('field_name', flat=True)
+        )
+
+    def show_diploma_tab(self):
+        return self.has_enabled_fields(self.diploma_tab_fields)
+
     def show_identification_tab(self):
-        # TODO: show tab according to field reference
-        return not self.user.person.is_program_manager and self._is_eligible_as_program_manager()
+        return self.has_enabled_fields(self.identification_tab_fields)
 
     def show_content_tab(self):
-        # TODO: show tab according to field reference
-        return not self.user.person.is_program_manager and self._is_eligible_as_program_manager()
+        # TODO: show content tab according to field reference ?
+        return self.show_identification_tab()
 
-    def _is_eligible_as_program_manager(self):
-        return hasattr(self.education_group_yr, 'education_group') and not is_program_manager(
-            user=self.user, education_group=self.education_group_yr.education_group
+    def has_enabled_fields(self, tab_fields):
+        return any(
+            not field.disabled for field_name, field
+            in self.forms[forms.ModelForm].fields.items() if field_name in tab_fields
         )
 
 
