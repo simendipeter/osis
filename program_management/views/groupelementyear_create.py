@@ -152,7 +152,9 @@ class CreateGroupElementYearView(GenericGroupElementYearMixin, CreateView):
                 'parent': self.education_group_year,
                 'child_branch': child if isinstance(child, EducationGroupYear) else None,
                 'child_leaf': child if isinstance(child, LearningUnitYear) else None,
-                'empty_permitted': False
+                'empty_permitted': False,
+                'is_central_manager': self.request.user.person.is_central_manager
+
             })
 
         kwargs["form_kwargs"] = kwargs_form_kwargs

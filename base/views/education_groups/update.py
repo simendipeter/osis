@@ -82,7 +82,8 @@ def update_education_group(request, root_id, education_group_year_id):
     groupelementyear_formset = GroupElementYearFormset(
         request.POST or None,
         prefix='group_element_year_formset',
-        queryset=education_group_year.groupelementyear_set.all()
+        queryset=education_group_year.groupelementyear_set.all(),
+        form_kwargs={'is_central_manager': person.is_central_manager}
     )
     return _update_education_group_year(request, root_id, education_group_year, groupelementyear_formset)
 
