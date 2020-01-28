@@ -795,3 +795,4 @@ class TestPermissionField(TestCase):
         self.assertTrue(form.show_identification_tab())
         self.assertFalse(form.show_diploma_tab())
         self.assertTrue(form.show_content_tab())
+
