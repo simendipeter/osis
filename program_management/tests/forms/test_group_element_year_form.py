@@ -51,6 +51,7 @@ class TestGroupElementYearForm(TestCase):
         )
         cls.child_leaf = LearningUnitYearFactory()
         cls.child_branch = MiniTrainingFactory(academic_year=cls.academic_year)
+        cls.person = PersonFactory()
 
     def setUp(self):
         self.all_fields_enabled = mock.patch(
@@ -62,7 +63,7 @@ class TestGroupElementYearForm(TestCase):
         self.addCleanup(cache.clear)
 
     def test_fields_relevant(self):
-        form = GroupElementYearForm(user=PersonFactory().user)
+        form = GroupElementYearForm(user=self.person.user)
 
         expected_fields = {
             "relative_credits",
@@ -80,7 +81,7 @@ class TestGroupElementYearForm(TestCase):
             data={'link_type': LinkTypes.REFERENCE.name},
             parent=self.parent,
             child_leaf=self.child_leaf,
-            user=PersonFactory().user
+            user=self.person.user
         )
 
         self.assertTrue(form.is_valid(), form.errors)
@@ -107,7 +108,7 @@ class TestGroupElementYearForm(TestCase):
             data={'link_type': LinkTypes.REFERENCE.name},
             parent=self.parent,
             child_branch=self.child_branch,
-            user=PersonFactory().user
+            user=self.person.user
         )
 
         self.assertTrue(form.is_valid())
@@ -132,7 +133,7 @@ class TestGroupElementYearForm(TestCase):
         )
 
     def test_remove_access_condition_when_not_authorized_relationship(self):
-        form = GroupElementYearForm(parent=self.parent, child_branch=self.child_branch, user=PersonFactory().user)
+        form = GroupElementYearForm(parent=self.parent, child_branch=self.child_branch, user=self.person.user)
         self.assertTrue("access_condition" not in list(form.fields.keys()))
 
     def test_only_keep_access_condition_when_parent_is_minor_major_option_list_choice(self):
@@ -144,7 +145,7 @@ class TestGroupElementYearForm(TestCase):
                     parent_type=parent.education_group_type,
                     child_type=self.child_branch.education_group_type,
                 )
-                form = GroupElementYearForm(parent=parent, child_branch=self.child_branch, user=PersonFactory().user)
+                form = GroupElementYearForm(parent=parent, child_branch=self.child_branch, user=self.person.user)
                 self.assertCountEqual(expected_fields, list(form.fields.keys()))
 
     def test_disable_all_fields_except_block_when_parent_is_formation_and_child_is_minor_major_option_list_choice(self):
@@ -158,7 +159,7 @@ class TestGroupElementYearForm(TestCase):
                     parent_type=self.parent.education_group_type,
                     child_type=child_branch.education_group_type
                 )
-                form = GroupElementYearForm(parent=self.parent, child_branch=child_branch, user=PersonFactory().user)
+                form = GroupElementYearForm(parent=self.parent, child_branch=child_branch, user=self.person.user)
                 enabled_fields = [name for name, field in form.fields.items() if not field.disabled]
                 self.assertCountEqual(expected_fields, enabled_fields)
 
@@ -167,7 +168,7 @@ class TestGroupElementYearForm(TestCase):
             parent_type=self.parent.education_group_type,
             child_type=self.child_branch.education_group_type
         )
-        form = GroupElementYearForm(parent=self.parent, child_branch=self.child_branch, user=PersonFactory().user)
+        form = GroupElementYearForm(parent=self.parent, child_branch=self.child_branch, user=self.person.user)
         self.assertTrue("access_condition" not in list(form.fields.keys()))
 
     def test_child_education_group_year_without_authorized_relationship_fails(self):
@@ -175,7 +176,7 @@ class TestGroupElementYearForm(TestCase):
             data={'link_type': ""},
             parent=self.parent,
             child_branch=self.child_branch,
-            user=PersonFactory().user
+            user=self.person.user
         )
 
         self.assertFalse(form.is_valid())
@@ -189,11 +190,11 @@ class TestGroupElementYearForm(TestCase):
         )
 
     def test_initial_value_relative_credits(self):
-        form = GroupElementYearForm(parent=self.parent, child_branch=self.child_branch, user=PersonFactory().user)
+        form = GroupElementYearForm(parent=self.parent, child_branch=self.child_branch, user=self.person.user)
         self.assertEqual(form.initial['relative_credits'], self.child_branch.credits)
 
-        form = GroupElementYearForm(parent=self.parent, child_leaf=self.child_leaf, user=PersonFactory().user)
+        form = GroupElementYearForm(parent=self.parent, child_leaf=self.child_leaf, user=self.person.user)
         self.assertEqual(form.initial['relative_credits'], self.child_leaf.credits)
 
-        form = GroupElementYearForm(parent=self.parent, user=PersonFactory().user)
+        form = GroupElementYearForm(parent=self.parent, user=self.person.user)
         self.assertEqual(form.initial['relative_credits'], None)
