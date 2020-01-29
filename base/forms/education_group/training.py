@@ -325,9 +325,6 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
         self.hops_form = self.hops_form_class(data=args[0], user=kwargs['user'], instance=education_group_yr_hops)
         self.user = kwargs.pop('user', None)
 
-        if not self.show_identification_tab():
-            self.field = ['pub_date', 'headline', 'content', 'reporter']
-
     def _post_save(self):
         self.hops_form.save(education_group_year=self.education_group_year_form.instance)
 
