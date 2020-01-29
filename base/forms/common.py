@@ -45,6 +45,13 @@ def set_trans_txt(form, texts_list):
         setattr(form, text_label, mark_safe(text))
 
 
+def has_enabled_fields(form, fields):
+    return any(
+        not field.disabled for field_name, field
+        in form.fields.items() if field_name in fields
+    )
+
+
 class WarningFormMixin:
     """
     Mixin for Form

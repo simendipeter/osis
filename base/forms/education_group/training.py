@@ -35,6 +35,7 @@ from django.utils.translation import gettext_lazy as _
 from base.business.education_groups import shorten
 from base.business.education_groups.postponement import PostponementEducationGroupYearMixin, \
     CheckConsistencyCertificateAimsMixin
+from base.forms import common
 from base.forms.education_group.common import CommonBaseForm, EducationGroupModelForm, \
     MainEntitiesVersionChoiceField, EducationGroupYearModelForm, PermissionFieldTrainingMixin
 from base.forms.utils.choice_field import add_blank
@@ -363,20 +364,10 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
         )
 
     def show_diploma_tab(self):
-        return self.has_enabled_fields(self.diploma_tab_fields)
+        return common.has_enabled_fields(self.forms[forms.ModelForm], self.diploma_tab_fields)
 
     def show_identification_tab(self):
-        return self.has_enabled_fields(self.identification_tab_fields)
-
-    def show_content_tab(self):
-        # TODO: show content tab according to field reference ?
-        return self.show_identification_tab()
-
-    def has_enabled_fields(self, tab_fields):
-        return any(
-            not field.disabled for field_name, field
-            in self.forms[forms.ModelForm].fields.items() if field_name in tab_fields
-        )
+        return common.has_enabled_fields(self.forms[forms.ModelForm], self.identification_tab_fields)
 
 
 @register('university_domains')
