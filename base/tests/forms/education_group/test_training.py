@@ -62,10 +62,11 @@ from base.tests.factories.person import PersonFactory, CentralManagerFactory, Fa
 from base.tests.factories.person_entity import PersonEntityFactory
 from base.tests.factories.program_manager import ProgramManagerFactory
 from base.tests.forms.education_group.test_common import EducationGroupYearModelFormMixin
+from program_management.forms.group_element_year import GroupElementYearFormset
 from reference.tests.factories.domain import DomainFactory
 from reference.tests.factories.language import LanguageFactory
 from rules_management.enums import TRAINING_DAILY_MANAGEMENT, TRAINING_PGRM_ENCODING_PERIOD, \
-    IDENTIFICATION_TAB_CATEGORY, DIPLOMA_TAB_CATEGORY
+    IDENTIFICATION_TAB_CATEGORY, DIPLOMA_TAB_CATEGORY, CONTENT_TAB_CATEGORY
 from rules_management.tests.fatories import PermissionFactory, FieldReferenceFactory
 
 
@@ -677,6 +678,16 @@ class TestPermissionField(TestCase):
         )
         diploma_field_reference.groups.add(CentralManagerGroupFactory(), ProgramManagerGroupFactory())
 
+        cls.content_field_name = "is_mandatory"
+        content_field_reference = FieldReferenceFactory(
+                content_type=ContentType.objects.get(app_label="base", model="groupelementyear"),
+                field_name=cls.content_field_name,
+                context=TRAINING_DAILY_MANAGEMENT,
+                permissions=cls.permissions,
+                category=CONTENT_TAB_CATEGORY,
+        )
+        content_field_reference.groups.add(CentralManagerGroupFactory(), FacultyManagerGroupFactory())
+
         person = PersonFactory()
         cls.user_with_perm = person.user
         cls.user_with_perm.user_permissions.add(cls.permissions[2])
@@ -741,10 +752,26 @@ class TestPermissionField(TestCase):
         expected_fields = [self.identification_field_name]
         self.assertEqual(form.identification_tab_fields, expected_fields)
 
+    def test_ensure_content_fields_property(self):
+        formset = GroupElementYearFormset(
+            {},
+            prefix='group_element_year_formset',
+            queryset=[],
+            form_kwargs={'user': self.user_with_perm, 'context': TRAINING_DAILY_MANAGEMENT}
+        )
+        expected_fields = [self.content_field_name]
+        self.assertEqual(formset.content_tab_fields, expected_fields)
+
     def test_ensure_central_manager_training_tabs(self):
         central_manager = CentralManagerFactory()
         person_entity = PersonEntityFactory(person=central_manager, entity=EntityFactory())
         EntityVersionFactory(entity=person_entity.entity)
+        formset = GroupElementYearFormset(
+            {},
+            prefix='group_element_year_formset',
+            queryset=[],
+            form_kwargs={'user': central_manager.user, 'context': TRAINING_DAILY_MANAGEMENT}
+        )
         form = TrainingForm(
             {},
             user=central_manager.user,
@@ -757,12 +784,18 @@ class TestPermissionField(TestCase):
         )
         self.assertTrue(form.show_identification_tab())
         self.assertTrue(form.show_diploma_tab())
-        self.assertTrue(form.show_content_tab())
+        self.assertTrue(formset.show_content_tab())
 
     def test_ensure_program_manager_training_tabs(self):
         program_manager = ProgramManagerFactory()
         person_entity = PersonEntityFactory(person=program_manager.person)
         EntityVersionFactory(entity=person_entity.entity)
+        formset = GroupElementYearFormset(
+            {},
+            prefix='group_element_year_formset',
+            queryset=[],
+            form_kwargs={'user': program_manager.person.user, 'context': TRAINING_DAILY_MANAGEMENT}
+        )
         form = TrainingForm(
             {},
             user=program_manager.person.user,
@@ -776,12 +809,18 @@ class TestPermissionField(TestCase):
         )
         self.assertFalse(form.show_identification_tab())
         self.assertTrue(form.show_diploma_tab())
-        self.assertFalse(form.show_content_tab())
+        self.assertFalse(formset.show_content_tab())
 
     def test_ensure_faculty_manager_training_tabs(self):
         faculty_manager = FacultyManagerFactory()
         person_entity = PersonEntityFactory(person=faculty_manager, entity=EntityFactory())
         EntityVersionFactory(entity=person_entity.entity)
+        formset = GroupElementYearFormset(
+            {},
+            prefix='group_element_year_formset',
+            queryset=[],
+            form_kwargs={'user': faculty_manager.user, 'context': TRAINING_DAILY_MANAGEMENT}
+        )
         form = TrainingForm(
             {},
             user=faculty_manager.user,
@@ -794,5 +833,5 @@ class TestPermissionField(TestCase):
         )
         self.assertTrue(form.show_identification_tab())
         self.assertFalse(form.show_diploma_tab())
-        self.assertTrue(form.show_content_tab())
+        self.assertTrue(formset.show_content_tab())
 

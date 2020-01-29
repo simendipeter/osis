@@ -130,7 +130,6 @@ def create_education_group(request, category, education_group_type_pk, root_id=N
                 "form_hops": form_education_group_year.hops_form,
                 "show_identification_tab": form_education_group_year.show_identification_tab(),
                 "show_diploma_tab": form_education_group_year.show_diploma_tab(),
-                "show_content_tab": form_education_group_year.show_content_tab()
             }
         )
 
