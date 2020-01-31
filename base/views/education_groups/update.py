@@ -37,7 +37,7 @@ from waffle.decorators import waffle_flag
 from base import models as mdl_base
 from base.business.education_group import has_coorganization
 from base.business.education_groups import perms
-from base.forms import common
+from base.forms.common import show_category_tab
 from base.forms.education_group.common import EducationGroupModelForm
 from base.forms.education_group.coorganization import OrganizationFormset
 from base.forms.education_group.group import GroupForm
@@ -104,7 +104,7 @@ def _get_view(category):
 
 def _common_success_redirect(request, form, root, groupelementyear_form=None):
     groupelementyear_changed = []
-    if groupelementyear_form and (not isinstance(form, TrainingForm) or form.show_identification_tab()):
+    if groupelementyear_form and show_category_tab(groupelementyear_form.empty_form, CONTENT_FIELDS_CATEGORY):
         groupelementyear_form.save()
         groupelementyear_changed = groupelementyear_form.changed_forms()
 
@@ -207,7 +207,7 @@ def _update_training(request, education_group_year, root, groupelementyear_forms
     education_group_year_form = training_form.education_group_year_form
     forms_valid = training_form.is_valid()
     coorganization_formset = None
-    if groupelementyear_formset and _show_category_tab(groupelementyear_formset.empty_form, DIPLOMA_FIELDS_CATEGORY):
+    if groupelementyear_formset and show_category_tab(groupelementyear_formset.empty_form, CONTENT_FIELDS_CATEGORY):
         coorganization_formset = _build_coorganization_formset(request, education_group_year)
         forms_valid = forms_valid and _check_formsets_validity(groupelementyear_formset, coorganization_formset)
     if request.method == 'POST':
@@ -224,9 +224,9 @@ def _update_training(request, education_group_year, root, groupelementyear_forms
         "form_education_group": training_form.forms[EducationGroupModelForm],
         "form_coorganization": coorganization_formset,
         "form_hops": training_form.hops_form,
-        "show_identification_tab": _show_category_tab(education_group_year_form, IDENTIFICATION_FIELDS_CATEGORY),
-        "show_diploma_tab": _show_category_tab(education_group_year_form, DIPLOMA_FIELDS_CATEGORY),
-        "show_content_tab": _show_category_tab(groupelementyear_formset.empty_form, CONTENT_FIELDS_CATEGORY),
+        "show_identification_tab": show_category_tab(education_group_year_form, IDENTIFICATION_FIELDS_CATEGORY),
+        "show_diploma_tab": show_category_tab(education_group_year_form, DIPLOMA_FIELDS_CATEGORY),
+        "show_content_tab": show_category_tab(groupelementyear_formset.empty_form, CONTENT_FIELDS_CATEGORY),
         "show_coorganization": has_coorganization(education_group_year),
         'can_change_coorganization': perms.is_eligible_to_change_coorganization(
             person=request.user.person,
@@ -292,6 +292,3 @@ def _update_mini_training(request, education_group_year, root, groupelementyear_
         'group_element_years': groupelementyear_formset
     })
 
-
-def _show_category_tab(form, category):
-    return common.has_enabled_fields(form, form.fields_categories[category])

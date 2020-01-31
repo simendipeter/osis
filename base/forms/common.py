@@ -45,6 +45,10 @@ def set_trans_txt(form, texts_list):
         setattr(form, text_label, mark_safe(text))
 
 
+def show_category_tab(form, category):
+    return has_enabled_fields(form, form.fields_categories[category])
+
+
 def has_enabled_fields(form, fields):
     return any(
         not field.disabled for field_name, field

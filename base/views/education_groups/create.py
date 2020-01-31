@@ -34,6 +34,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import FormView
 from waffle.decorators import waffle_flag
 
+from base.forms.common import show_category_tab
 from base.forms.education_group.common import EducationGroupModelForm, EducationGroupTypeForm
 from base.forms.education_group.group import GroupForm
 from base.forms.education_group.mini_training import MiniTrainingForm
@@ -49,6 +50,7 @@ from base.views.common import display_success_messages, show_error_message_for_f
 from base.views.education_groups.perms import can_create_education_group
 from base.views.mixins import FlagMixin, AjaxTemplateMixin
 from osis_common.decorators.ajax import ajax_required
+from rules_management.enums import DIPLOMA_FIELDS_CATEGORY, IDENTIFICATION_FIELDS_CATEGORY
 
 FORMS_BY_CATEGORY = {
     education_group_categories.GROUP: GroupForm,
@@ -124,12 +126,14 @@ def create_education_group(request, category, education_group_type_pk, root_id=N
         'root_pk': root_id,
     }
 
+    education_group_year_form = form_education_group_year.education_group_year_form
+
     if category == education_group_categories.TRAINING:
         data.update(
             {
                 "form_hops": form_education_group_year.hops_form,
-                "show_identification_tab": form_education_group_year.show_identification_tab(),
-                "show_diploma_tab": form_education_group_year.show_diploma_tab(),
+                "show_identification_tab": show_category_tab(education_group_year_form, IDENTIFICATION_FIELDS_CATEGORY),
+                "show_diploma_tab": show_category_tab(education_group_year_form, DIPLOMA_FIELDS_CATEGORY),
             }
         )
 
