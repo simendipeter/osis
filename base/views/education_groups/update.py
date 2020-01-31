@@ -37,6 +37,7 @@ from waffle.decorators import waffle_flag
 from base import models as mdl_base
 from base.business.education_group import has_coorganization
 from base.business.education_groups import perms
+from base.forms import common
 from base.forms.education_group.common import EducationGroupModelForm
 from base.forms.education_group.coorganization import OrganizationFormset
 from base.forms.education_group.group import GroupForm
@@ -49,7 +50,8 @@ from base.models.group_element_year import GroupElementYear
 from base.views.common import display_success_messages, display_warning_messages, show_error_message_for_form_invalid
 from base.views.education_groups.perms import can_change_education_group
 from program_management.forms.group_element_year import GroupElementYearFormset
-from rules_management.enums import TRAINING_DAILY_MANAGEMENT
+from rules_management.enums import TRAINING_DAILY_MANAGEMENT, IDENTIFICATION_FIELDS_CATEGORY, DIPLOMA_FIELDS_CATEGORY, \
+    CONTENT_FIELDS_CATEGORY
 
 
 @login_required
@@ -201,31 +203,31 @@ def _update_group(request, education_group_year, root, groupelementyear_formset)
 def _update_training(request, education_group_year, root, groupelementyear_formset):
     # TODO :: IMPORTANT :: Fix urls patterns to get the GroupElementYear_id and the root_id in the url path !
     # TODO :: IMPORTANT :: Need to update form to filter on list of parents, not only on the first direct parent
-    form_education_group_year = TrainingForm(request.POST or None, user=request.user, instance=education_group_year)
-    show_identification_tab = form_education_group_year.show_identification_tab()
-    forms_valid = form_education_group_year.is_valid()
+    training_form = TrainingForm(request.POST or None, user=request.user, instance=education_group_year)
+    education_group_year_form = training_form.education_group_year_form
+    forms_valid = training_form.is_valid()
     coorganization_formset = None
-    if groupelementyear_formset and groupelementyear_formset.show_content_tab():
+    if groupelementyear_formset and _show_category_tab(groupelementyear_formset.empty_form, DIPLOMA_FIELDS_CATEGORY):
         coorganization_formset = _build_coorganization_formset(request, education_group_year)
         forms_valid = forms_valid and _check_formsets_validity(groupelementyear_formset, coorganization_formset)
     if request.method == 'POST':
         if forms_valid:
             if has_coorganization(education_group_year) and coorganization_formset:
                 coorganization_formset.save()
-            return _common_success_redirect(request, form_education_group_year, root, groupelementyear_formset)
+            return _common_success_redirect(request, training_form, root, groupelementyear_formset)
         else:
             show_error_message_for_form_invalid(request)
 
     return render(request, "education_group/update_trainings.html", {
         "education_group_year": education_group_year,
-        "form_education_group_year": form_education_group_year.forms[forms.ModelForm],
-        "form_education_group": form_education_group_year.forms[EducationGroupModelForm],
+        "form_education_group_year": training_form.forms[forms.ModelForm],
+        "form_education_group": training_form.forms[EducationGroupModelForm],
         "form_coorganization": coorganization_formset,
-        "form_hops": form_education_group_year.hops_form,
-        "show_identification_tab": show_identification_tab,
+        "form_hops": training_form.hops_form,
+        "show_identification_tab": _show_category_tab(education_group_year_form, IDENTIFICATION_FIELDS_CATEGORY),
+        "show_diploma_tab": _show_category_tab(education_group_year_form, DIPLOMA_FIELDS_CATEGORY),
+        "show_content_tab": _show_category_tab(groupelementyear_formset.empty_form, CONTENT_FIELDS_CATEGORY),
         "show_coorganization": has_coorganization(education_group_year),
-        "show_diploma_tab": form_education_group_year.show_diploma_tab(),
-        "show_content_tab": groupelementyear_formset.show_content_tab(),
         'can_change_coorganization': perms.is_eligible_to_change_coorganization(
             person=request.user.person,
             education_group_yr=education_group_year,
@@ -289,3 +291,7 @@ def _update_mini_training(request, education_group_year, root, groupelementyear_
         "form_education_group": form.forms[EducationGroupModelForm],
         'group_element_years': groupelementyear_formset
     })
+
+
+def _show_category_tab(form, category):
+    return common.has_enabled_fields(form, form.fields_categories[category])

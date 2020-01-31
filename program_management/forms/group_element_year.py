@@ -27,15 +27,12 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import modelformset_factory, BaseModelFormSet
 
-from base.forms import common
 from base.models.enums import education_group_categories
 from base.models.group_element_year import GroupElementYear
 from program_management.business.group_element_years.attach import AttachEducationGroupYearStrategy, \
     AttachLearningUnitYearStrategy
 from program_management.business.group_element_years.management import CheckAuthorizedRelationshipAttach
-from rules_management.enums import CONTENT_TAB_CATEGORY
 from rules_management.mixins import PermissionFieldMixin
-from rules_management.models import FieldReference
 
 
 class GroupElementYearForm(PermissionFieldMixin, forms.ModelForm):
@@ -157,16 +154,6 @@ class BaseGroupElementYearFormset(BaseModelFormSet):
         if isinstance(self.form_kwargs, list):
             return self.form_kwargs[index]
         return self.form_kwargs or {}
-
-    @property
-    def content_tab_fields(self):
-        return list(
-            FieldReference.objects.filter(
-                context="TRAINING_DAILY_MANAGEMENT", category=CONTENT_TAB_CATEGORY
-            ).values_list('field_name', flat=True))
-
-    def show_content_tab(self):
-        return common.has_enabled_fields(self.empty_form, self.content_tab_fields)
 
 
 GroupElementYearFormset = modelformset_factory(

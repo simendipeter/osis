@@ -28,6 +28,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 
+from rules_management.enums import FIELDS_CATEGORIES
 from rules_management.models import FieldReference
 
 
@@ -51,6 +52,7 @@ class PermissionFieldMixin(ModelFormMixin):
     user = None
 
     def __init__(self, *args, user=None, **kwargs):
+
         if user:
             self.user = user
 
@@ -100,3 +102,13 @@ class PermissionFieldMixin(ModelFormMixin):
         :return: self.context
         """
         return self.context
+
+    @property
+    def fields_categories(self):
+        fields_categories = {category: [] for category in FIELDS_CATEGORIES}
+        references = FieldReference.objects.filter(
+            category__in=FIELDS_CATEGORIES
+        ).values_list('field_name', 'category').distinct('field_name')
+        for field_name, category in references:
+            fields_categories[category].append(field_name)
+        return fields_categories

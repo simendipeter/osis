@@ -35,7 +35,6 @@ from django.utils.translation import gettext_lazy as _
 from base.business.education_groups import shorten
 from base.business.education_groups.postponement import PostponementEducationGroupYearMixin, \
     CheckConsistencyCertificateAimsMixin
-from base.forms import common
 from base.forms.education_group.common import CommonBaseForm, EducationGroupModelForm, \
     MainEntitiesVersionChoiceField, EducationGroupYearModelForm, PermissionFieldTrainingMixin
 from base.forms.utils.choice_field import add_blank
@@ -52,8 +51,6 @@ from base.models.program_manager import is_program_manager
 from reference.models.domain import Domain
 from reference.models.enums import domain_type
 from reference.models.language import Language
-from rules_management.enums import DIPLOMA_TAB_CATEGORY, IDENTIFICATION_TAB_CATEGORY
-from rules_management.models import FieldReference
 
 
 def _get_section_choices():
@@ -343,28 +340,6 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
                 self.education_group_year_form.fields[field].required = False
                 self.education_group_year_form.fields[field].validators = []
         return super(TrainingForm, self).is_valid() and self.hops_form.is_valid()
-
-    @property
-    def diploma_tab_fields(self):
-        return list(
-            FieldReference.objects.filter(
-                context="TRAINING_DAILY_MANAGEMENT", category=DIPLOMA_TAB_CATEGORY
-            ).values_list('field_name', flat=True)
-        )
-
-    @property
-    def identification_tab_fields(self):
-        return list(
-            FieldReference.objects.filter(
-                context="TRAINING_DAILY_MANAGEMENT", category=IDENTIFICATION_TAB_CATEGORY
-            ).values_list('field_name', flat=True)
-        )
-
-    def show_diploma_tab(self):
-        return common.has_enabled_fields(self.forms[forms.ModelForm], self.diploma_tab_fields)
-
-    def show_identification_tab(self):
-        return common.has_enabled_fields(self.forms[forms.ModelForm], self.identification_tab_fields)
 
 
 @register('university_domains')
