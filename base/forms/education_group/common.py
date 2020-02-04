@@ -103,7 +103,11 @@ class PermissionFieldEducationGroupMixin(PermissionFieldMixin):
     This mixin will get allowed field on reference_field model according to perm's
     """
     def get_context(self):
-        is_edition_period_egy_opened = EventPermEducationGroupEdition().is_open()
+        education_group_year = self.instance if isinstance(self.instance, EducationGroupYear) and \
+                                                hasattr(self.instance, 'academic_year') else None
+        is_edition_period_egy_opened = EventPermEducationGroupEdition(
+            obj=education_group_year, raise_exception=False
+        ).is_open()
         if self.category == education_group_categories.TRAINING:
             return TRAINING_PGRM_ENCODING_PERIOD if is_edition_period_egy_opened else \
                 TRAINING_DAILY_MANAGEMENT

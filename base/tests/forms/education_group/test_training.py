@@ -434,6 +434,7 @@ class TestPostponementEducationGroupYear(TestCase):
         )
 
     def test_save_with_postponement_m2m(self):
+        ProgramManagerFactory(person=self.person, education_group=self.education_group_year.education_group)
         domains = [DomainFactory(name="Alchemy"), DomainFactory(name="Muggle Studies")]
         self.data["secondary_domains"] = '|'.join([str(domain.pk) for domain in domains])
 
@@ -442,8 +443,9 @@ class TestPostponementEducationGroupYear(TestCase):
 
         self._create_postponed_egys()
 
-        last = EducationGroupYear.objects.filter(education_group=self.education_group_year.education_group
-                                                 ).order_by('academic_year').last()
+        last = EducationGroupYear.objects.filter(
+            education_group=self.education_group_year.education_group
+        ).order_by('academic_year').last()
 
         self.education_group_year.refresh_from_db()
         self.assertEqual(self.education_group_year.secondary_domains.count(), 2)
@@ -659,35 +661,65 @@ class TestPermissionField(TestCase):
             permissions=cls.permissions,
         )
 
+        central_manager_group = CentralManagerGroupFactory()
+        faculty_manager_group = FacultyManagerGroupFactory()
+        program_manager_group = ProgramManagerGroupFactory()
+
+        context_roles_permissions = {
+            TRAINING_DAILY_MANAGEMENT: [central_manager_group],
+            TRAINING_PGRM_ENCODING_PERIOD: [central_manager_group, faculty_manager_group]
+        }
+
         cls.identification_field_name = "acronym"
-        identification_field_reference = FieldReferenceFactory(
+        cls.specific_identification_field_name = "keywords"
+        for context, roles in context_roles_permissions.items():
+            identification_field_reference = FieldReferenceFactory(
+                    content_type=ContentType.objects.get(app_label="base", model="educationgroupyear"),
+                    field_name=cls.identification_field_name,
+                    context=context,
+                    permissions=cls.permissions,
+                    category=IDENTIFICATION_FIELDS_CATEGORY,
+            )
+            identification_field_reference.groups.add(*roles)
+            specific_identification_field_reference = FieldReferenceFactory(
                 content_type=ContentType.objects.get(app_label="base", model="educationgroupyear"),
-                field_name=cls.identification_field_name,
-                context=TRAINING_DAILY_MANAGEMENT,
+                field_name=cls.specific_identification_field_name,
+                context=context,
                 permissions=cls.permissions,
                 category=IDENTIFICATION_FIELDS_CATEGORY,
-        )
-        identification_field_reference.groups.add(CentralManagerGroupFactory(), FacultyManagerGroupFactory())
-
-        cls.diploma_field_name = "certificate_aims"
-        diploma_field_reference = FieldReferenceFactory(
-                content_type=ContentType.objects.get(app_label="base", model="educationgroupyear"),
-                field_name=cls.diploma_field_name,
-                context=TRAINING_DAILY_MANAGEMENT,
-                permissions=cls.permissions,
-                category=DIPLOMA_FIELDS_CATEGORY,
-        )
-        diploma_field_reference.groups.add(CentralManagerGroupFactory(), ProgramManagerGroupFactory())
+            )
+            specific_identification_field_reference.groups.add(central_manager_group, faculty_manager_group)
 
         cls.content_field_name = "is_mandatory"
-        content_field_reference = FieldReferenceFactory(
-                content_type=ContentType.objects.get(app_label="base", model="groupelementyear"),
-                field_name=cls.content_field_name,
-                context=TRAINING_DAILY_MANAGEMENT,
+        for context, roles in context_roles_permissions.items():
+            content_field_reference = FieldReferenceFactory(
+                    content_type=ContentType.objects.get(app_label="base", model="groupelementyear"),
+                    field_name=cls.content_field_name,
+                    context=context,
+                    permissions=cls.permissions,
+                    category=CONTENT_FIELDS_CATEGORY,
+            )
+            content_field_reference.groups.add(*roles)
+
+        cls.diploma_field_name = "certificate_aims"
+        cls.specific_diploma_field_name = "professional_title"
+        for context, roles in context_roles_permissions.items():
+            diploma_field_reference = FieldReferenceFactory(
+                    content_type=ContentType.objects.get(app_label="base", model="educationgroupyear"),
+                    field_name=cls.diploma_field_name,
+                    context=context,
+                    permissions=cls.permissions,
+                    category=DIPLOMA_FIELDS_CATEGORY,
+            )
+            diploma_field_reference.groups.add(central_manager_group, program_manager_group)
+            specific_diploma_field_reference = FieldReferenceFactory(
+                content_type=ContentType.objects.get(app_label="base", model="educationgroupyear"),
+                field_name=cls.specific_diploma_field_name,
+                context=context,
                 permissions=cls.permissions,
-                category=CONTENT_FIELDS_CATEGORY,
-        )
-        content_field_reference.groups.add(CentralManagerGroupFactory(), FacultyManagerGroupFactory())
+                category=DIPLOMA_FIELDS_CATEGORY,
+            )
+            specific_diploma_field_reference.groups.add(central_manager_group)
 
         person = PersonFactory()
         cls.user_with_perm = person.user
@@ -741,12 +773,12 @@ class TestPermissionField(TestCase):
             context=TRAINING_DAILY_MANAGEMENT,
         )
         expected = {
-            IDENTIFICATION_FIELDS_CATEGORY: [self.identification_field_name],
-            DIPLOMA_FIELDS_CATEGORY: [self.diploma_field_name],
+            IDENTIFICATION_FIELDS_CATEGORY: [self.identification_field_name, self.specific_identification_field_name],
+            DIPLOMA_FIELDS_CATEGORY: [self.diploma_field_name, self.specific_diploma_field_name],
             CONTENT_FIELDS_CATEGORY: [self.content_field_name]
         }
         fields_categories = form.education_group_year_form.fields_categories
-        self.assertEqual(fields_categories, expected)
+        self.assertDictEqual(fields_categories, expected)
 
     def test_central_manager_training_tabs(self):
         central_manager = CentralManagerFactory()
@@ -819,9 +851,9 @@ class TestPermissionField(TestCase):
         )
         self.assertTrue(show_category_tab(form.education_group_year_form, IDENTIFICATION_FIELDS_CATEGORY))
         self.assertFalse(show_category_tab(form.education_group_year_form, DIPLOMA_FIELDS_CATEGORY))
-        self.assertTrue(show_category_tab(formset.empty_form, CONTENT_FIELDS_CATEGORY))
+        self.assertFalse(show_category_tab(formset.empty_form, CONTENT_FIELDS_CATEGORY))
 
-    def test_both_roles_faculty_manager_and_program_manager_training_tabs(self):
+    def test_both_roles_faculty_manager_and_program_manager_training_tabs_in_program_encoding_period(self):
         faculty_and_program_manager = FacultyManagerFactory()
         faculty_and_program_manager.user.groups.add(ProgramManagerGroupFactory())
         person_entity = PersonEntityFactory(person=faculty_and_program_manager, entity=EntityFactory())
@@ -841,12 +873,39 @@ class TestPermissionField(TestCase):
             {},
             user=faculty_and_program_manager.user,
             education_group_type=self.education_group_type,
-            context=TRAINING_DAILY_MANAGEMENT,
+            context=TRAINING_PGRM_ENCODING_PERIOD,
             instance=egy
         )
         self.assertTrue(show_category_tab(form.education_group_year_form, IDENTIFICATION_FIELDS_CATEGORY))
         self.assertTrue(show_category_tab(form.education_group_year_form, DIPLOMA_FIELDS_CATEGORY))
         self.assertTrue(show_category_tab(formset.empty_form, CONTENT_FIELDS_CATEGORY))
+
+    def test_both_roles_faculty_manager_and_program_manager_training_tabs_in_daily_management(self):
+        faculty_and_program_manager = FacultyManagerFactory()
+        faculty_and_program_manager.user.groups.add(ProgramManagerGroupFactory())
+        person_entity = PersonEntityFactory(person=faculty_and_program_manager, entity=EntityFactory())
+        egy = EducationGroupYearFactory(
+            management_entity=person_entity.entity,
+            administration_entity=person_entity.entity
+        )
+        ProgramManagerFactory(person=faculty_and_program_manager, education_group=egy.education_group)
+        EntityVersionFactory(entity=person_entity.entity)
+        formset = GroupElementYearFormset(
+            {},
+            prefix='group_element_year_formset',
+            queryset=[],
+            form_kwargs={'user': faculty_and_program_manager.user, 'context': TRAINING_DAILY_MANAGEMENT}
+        )
+        form = TrainingForm(
+            {},
+            user=faculty_and_program_manager.user,
+            education_group_type=self.education_group_type,
+            context=TRAINING_DAILY_MANAGEMENT,
+            instance=egy
+        )
+        self.assertTrue(show_category_tab(form.education_group_year_form, IDENTIFICATION_FIELDS_CATEGORY))
+        self.assertTrue(show_category_tab(form.education_group_year_form, DIPLOMA_FIELDS_CATEGORY))
+        self.assertFalse(show_category_tab(formset.empty_form, CONTENT_FIELDS_CATEGORY))
 
     def test_both_roles_central_manager_and_program_manager_training_tabs(self):
         central_and_program_manager = CentralManagerFactory()

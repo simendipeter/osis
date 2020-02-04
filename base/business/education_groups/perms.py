@@ -131,7 +131,9 @@ def is_eligible_to_delete_achievement(person, education_group_yr, raise_exceptio
 
 def is_eligible_to_delete_education_group(person, education_group_yr, raise_exception=False):
     return check_permission(person, "base.delete_educationgroup", raise_exception) and \
-           _is_eligible_education_group(person, education_group_yr, raise_exception)
+           _is_eligible_education_group(person, education_group_yr, raise_exception) and \
+           person.is_central_manager or \
+           (person.is_faculty_manager and _is_edition_period_open(education_group_yr, raise_exception))
 
 
 def is_eligible_to_delete_education_group_year(person, education_group_yr, raise_exception=False):
@@ -142,19 +144,23 @@ def _is_eligible_education_group(person, education_group_yr, raise_exception):
     return (
         check_link_to_management_entity(education_group_yr, person, raise_exception) and
         (
-            person.is_central_manager or
+            person.is_central_manager or person.is_faculty_manager or
             _is_education_group_program_manager(person, education_group_yr, raise_exception) or
-            EventPermEducationGroupEdition(obj=education_group_yr, raise_exception=raise_exception).is_open()
+            _is_edition_period_open(education_group_yr, raise_exception)
         )
     )
 
 
 def _is_education_group_program_manager(person, education_group_yr, raise_exception):
-    result = hasattr(education_group_yr, 'education_group') and \
+    result = education_group_yr and hasattr(education_group_yr, 'education_group') and \
              is_program_manager(person.user, education_group=education_group_yr.education_group)
     error_msg = _('The user is not the program manager of the education group')
     can_raise_exception(person.is_program_manager and raise_exception, result, error_msg)
     return result
+
+
+def _is_edition_period_open(education_group_yr, raise_exception):
+    return EventPermEducationGroupEdition(obj=education_group_yr, raise_exception=raise_exception).is_open()
 
 
 def _is_eligible_to_add_education_group_with_category(person, education_group_yr, category, raise_exception):

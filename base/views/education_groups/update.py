@@ -50,7 +50,7 @@ from base.models.group_element_year import GroupElementYear
 from base.views.common import display_success_messages, display_warning_messages, show_error_message_for_form_invalid
 from base.views.education_groups.perms import can_change_education_group
 from program_management.forms.group_element_year import GroupElementYearFormset
-from rules_management.enums import TRAINING_DAILY_MANAGEMENT, IDENTIFICATION_FIELDS_CATEGORY, DIPLOMA_FIELDS_CATEGORY, \
+from rules_management.enums import IDENTIFICATION_FIELDS_CATEGORY, DIPLOMA_FIELDS_CATEGORY, \
     CONTENT_FIELDS_CATEGORY
 
 
@@ -80,7 +80,7 @@ def update_education_group(request, root_id, education_group_year_id):
         request.POST or None,
         prefix='group_element_year_formset',
         queryset=education_group_year.groupelementyear_set.all(),
-        form_kwargs={'user': request.user, 'context': TRAINING_DAILY_MANAGEMENT}
+        form_kwargs={'user': request.user}
     )
     return _update_education_group_year(request, root_id, education_group_year, groupelementyear_formset)
 
@@ -207,9 +207,11 @@ def _update_training(request, education_group_year, root, groupelementyear_forms
     education_group_year_form = training_form.education_group_year_form
     forms_valid = training_form.is_valid()
     coorganization_formset = None
-    if groupelementyear_formset and show_category_tab(groupelementyear_formset.empty_form, CONTENT_FIELDS_CATEGORY):
-        coorganization_formset = _build_coorganization_formset(request, education_group_year)
-        forms_valid = forms_valid and _check_formsets_validity(groupelementyear_formset, coorganization_formset)
+    if groupelementyear_formset:
+        groupelementyear_formset.form.context = education_group_year_form.get_context()
+        if show_category_tab(groupelementyear_formset.empty_form, CONTENT_FIELDS_CATEGORY):
+            coorganization_formset = _build_coorganization_formset(request, education_group_year)
+            forms_valid = forms_valid and _check_formsets_validity(groupelementyear_formset, coorganization_formset)
     if request.method == 'POST':
         if forms_valid:
             if has_coorganization(education_group_year) and coorganization_formset:

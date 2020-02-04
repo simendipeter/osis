@@ -212,9 +212,10 @@ class TrainingEducationGroupYearForm(EducationGroupYearModelForm):
         self.fields['main_domain'].queryset = Domain.objects.filter(type=domain_type.UNIVERSITY)\
                                                     .select_related('decree')
 
-        if kwargs.get('instance') and \
-                is_program_manager(user=kwargs['user'], education_group=kwargs['instance'].education_group):
-            self.fields['certificate_aims'].disabled = False
+        if kwargs.get('instance'):
+            self.fields['certificate_aims'].disabled = not is_program_manager(
+                user=kwargs['user'], education_group=kwargs['instance'].education_group
+            )
 
         if not self.fields['certificate_aims'].disabled:
             self.fields['section'].disabled = False

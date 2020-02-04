@@ -74,7 +74,6 @@ class EducationGroupYearModelFormMixin(TestCase):
             "management_entity": new_entity_version.pk,
             "remark": "This is a test!!"
         }
-
         cls.parent_education_group_year = EducationGroupYearFactory(academic_year=cls.academic_year)
         # Append version to management/administration entity
         cls.entity_version = EntityVersionFactory(entity=cls.parent_education_group_year.management_entity)

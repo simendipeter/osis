@@ -107,8 +107,8 @@ class PermissionFieldMixin(ModelFormMixin):
     def fields_categories(self):
         fields_categories = {category: [] for category in FIELDS_CATEGORIES}
         references = FieldReference.objects.filter(
-            category__in=FIELDS_CATEGORIES
-        ).values_list('field_name', 'category').distinct('field_name')
+            category__in=FIELDS_CATEGORIES, context=self.get_context()
+        ).values_list('field_name', 'category')
         for field_name, category in references:
             fields_categories[category].append(field_name)
         return fields_categories

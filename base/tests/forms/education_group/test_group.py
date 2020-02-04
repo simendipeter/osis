@@ -184,6 +184,7 @@ class TestGroupPostponedList(EducationGroupYearModelFormMixin):
         cls.education_group_type = EducationGroupTypeFactory(
             category=education_group_categories.GROUP
         )
+        AuthorizedRelationshipFactory(child_type=cls.education_group_type)
         super(TestGroupPostponedList, cls).setUpTestData(education_group_type=cls.education_group_type)
 
     def test_group_doesnt_have_post_save_method(self):
