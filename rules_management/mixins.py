@@ -23,6 +23,8 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
+from itertools import groupby
+
 from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Prefetch
@@ -105,10 +107,7 @@ class PermissionFieldMixin(ModelFormMixin):
 
     @property
     def fields_categories(self):
-        fields_categories = {category: [] for category in FIELDS_CATEGORIES}
         references = FieldReference.objects.filter(
             category__in=FIELDS_CATEGORIES, context=self.get_context()
-        ).values_list('field_name', 'category')
-        for field_name, category in references:
-            fields_categories[category].append(field_name)
-        return fields_categories
+        ).order_by('category')
+        return {k: [x.field_name for x in g] for k, g in groupby(references, key=lambda q: q.category)}
