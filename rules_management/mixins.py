@@ -110,4 +110,5 @@ class PermissionFieldMixin(ModelFormMixin):
         references = FieldReference.objects.filter(
             category__in=FIELDS_CATEGORIES, context=self.get_context()
         ).order_by('category')
-        return {k: [x.field_name for x in g] for k, g in groupby(references, key=lambda q: q.category)}
+        fields_categories = {k: [x.field_name for x in g] for k, g in groupby(references, key=lambda q: q.category)}
+        return fields_categories if fields_categories else {category: [] for category in FIELDS_CATEGORIES}
