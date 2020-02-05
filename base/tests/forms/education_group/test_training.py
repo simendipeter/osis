@@ -63,11 +63,12 @@ from base.tests.factories.person import PersonFactory, CentralManagerFactory, Fa
 from base.tests.factories.person_entity import PersonEntityFactory
 from base.tests.factories.program_manager import ProgramManagerFactory
 from base.tests.forms.education_group.test_common import EducationGroupYearModelFormMixin
+from education_group.enums.fields_category import IDENTIFICATION_FIELDS_CATEGORY, DIPLOMA_FIELDS_CATEGORY, \
+    CONTENT_FIELDS_CATEGORY
 from program_management.forms.group_element_year import GroupElementYearFormset
 from reference.tests.factories.domain import DomainFactory
 from reference.tests.factories.language import LanguageFactory
-from rules_management.enums import TRAINING_DAILY_MANAGEMENT, TRAINING_PGRM_ENCODING_PERIOD, \
-    IDENTIFICATION_FIELDS_CATEGORY, DIPLOMA_FIELDS_CATEGORY, CONTENT_FIELDS_CATEGORY
+from rules_management.enums import TRAINING_DAILY_MANAGEMENT, TRAINING_PGRM_ENCODING_PERIOD
 from rules_management.tests.fatories import PermissionFactory, FieldReferenceFactory
 
 

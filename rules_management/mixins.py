@@ -23,14 +23,14 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
-from itertools import groupby
 
 from django.contrib.auth.models import Permission, Group
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Prefetch
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from rules_management.enums import FIELDS_CATEGORIES
 from rules_management.models import FieldReference
 
 
@@ -105,10 +105,18 @@ class PermissionFieldMixin(ModelFormMixin):
         """
         return self.context
 
-    @property
+    def is_valid(self):
+        for field in self.fields:
+            if self.fields[field].disabled:
+                self.fields[field].required = False
+                self.fields[field].validators = []
+        return super().is_valid()
+
+    @cached_property
     def fields_categories(self):
-        references = FieldReference.objects.filter(
-            category__in=FIELDS_CATEGORIES, context=self.get_context()
-        ).order_by('category')
-        fields_categories = {k: [x.field_name for x in g] for k, g in groupby(references, key=lambda q: q.category)}
-        return fields_categories if fields_categories else {category: [] for category in FIELDS_CATEGORIES}
+        fields_categories = FieldReference.objects.filter(context=self.get_context()).exclude(
+            category__isnull=True
+        ).values('category').annotate(
+            fields=ArrayAgg('field_name')
+        )
+        return {item['category']: item['fields'] for item in fields_categories}

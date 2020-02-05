@@ -49,8 +49,8 @@ from base.utils.cache import RequestCache
 from base.views.common import display_success_messages, show_error_message_for_form_invalid
 from base.views.education_groups.perms import can_create_education_group
 from base.views.mixins import FlagMixin, AjaxTemplateMixin
+from education_group.enums.fields_category import IDENTIFICATION_FIELDS_CATEGORY, DIPLOMA_FIELDS_CATEGORY
 from osis_common.decorators.ajax import ajax_required
-from rules_management.enums import DIPLOMA_FIELDS_CATEGORY, IDENTIFICATION_FIELDS_CATEGORY
 
 FORMS_BY_CATEGORY = {
     education_group_categories.GROUP: GroupForm,

@@ -47,7 +47,6 @@ from base.models.enums import education_group_categories, rate_code, decree_cate
 from base.models.enums.education_group_categories import Categories
 from base.models.enums.education_group_types import TrainingType
 from base.models.hops import Hops
-from base.models.program_manager import is_program_manager
 from reference.models.domain import Domain
 from reference.models.enums import domain_type
 from reference.models.language import Language
@@ -212,11 +211,6 @@ class TrainingEducationGroupYearForm(EducationGroupYearModelForm):
         self.fields['main_domain'].queryset = Domain.objects.filter(type=domain_type.UNIVERSITY)\
                                                     .select_related('decree')
 
-        if kwargs.get('instance'):
-            self.fields['certificate_aims'].disabled = not is_program_manager(
-                user=kwargs['user'], education_group=kwargs['instance'].education_group
-            )
-
         if not self.fields['certificate_aims'].disabled:
             self.fields['section'].disabled = False
 
@@ -336,10 +330,6 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
         }
 
     def is_valid(self):
-        for field in self.education_group_year_form.fields:
-            if self.education_group_year_form.fields[field].disabled:
-                self.education_group_year_form.fields[field].required = False
-                self.education_group_year_form.fields[field].validators = []
         return super(TrainingForm, self).is_valid() and self.hops_form.is_valid()
 
 

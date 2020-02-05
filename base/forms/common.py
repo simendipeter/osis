@@ -46,7 +46,7 @@ def set_trans_txt(form, texts_list):
 
 
 def show_category_tab(form, category):
-    return has_enabled_fields(form, form.fields_categories[category])
+    return has_enabled_fields(form, form.fields_categories.get(category) or [])
 
 
 def has_enabled_fields(form, fields):

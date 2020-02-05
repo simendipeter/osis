@@ -49,9 +49,9 @@ from base.models.enums import education_group_categories
 from base.models.group_element_year import GroupElementYear
 from base.views.common import display_success_messages, display_warning_messages, show_error_message_for_form_invalid
 from base.views.education_groups.perms import can_change_education_group
-from program_management.forms.group_element_year import GroupElementYearFormset
-from rules_management.enums import IDENTIFICATION_FIELDS_CATEGORY, DIPLOMA_FIELDS_CATEGORY, \
+from education_group.enums.fields_category import IDENTIFICATION_FIELDS_CATEGORY, DIPLOMA_FIELDS_CATEGORY, \
     CONTENT_FIELDS_CATEGORY
+from program_management.forms.group_element_year import GroupElementYearFormset
 
 
 @login_required
