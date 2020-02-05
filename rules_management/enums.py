@@ -35,7 +35,6 @@ GROUP_DAILY_MANAGEMENT = 'GROUP_DAILY_MANAGEMENT'
 GROUP_PROPOSAL_MANAGEMENT = 'GROUP_PROPOSAL_MANAGEMENT'
 GROUP_PGRM_ENCODING_PERIOD = 'GROUP_PGRM_ENCODING_PERIOD'
 
-
 CONTEXT_CHOICES = (
     (TRAINING_DAILY_MANAGEMENT, _('Training management day-to-day')),
     (TRAINING_PROPOSAL_MANAGEMENT, _('Training management during proposal stage')),
@@ -47,3 +46,4 @@ CONTEXT_CHOICES = (
     (GROUP_PROPOSAL_MANAGEMENT, _('Group management during proposal stage')),
     (GROUP_PGRM_ENCODING_PERIOD, _('Group management during program type encoding period')),
 )
+

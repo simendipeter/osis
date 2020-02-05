@@ -38,6 +38,7 @@ from base.tests.factories.academic_calendar import OpenAcademicCalendarFactory
 from base.tests.factories.academic_year import create_current_academic_year
 from base.tests.factories.education_group import EducationGroupFactory
 from base.tests.factories.education_group_year import EducationGroupYearFactory
+from base.tests.factories.group import CentralManagerGroupFactory
 from base.tests.factories.group_element_year import GroupElementYearFactory
 from base.tests.factories.offer_enrollment import OfferEnrollmentFactory
 from base.tests.factories.person import PersonWithPermissionsFactory
@@ -56,6 +57,7 @@ class TestDeleteGroupEducationView(TestCase):
         cls.education_group1 = EducationGroupFactory()
         cls.education_group2 = EducationGroupFactory()
         cls.person = PersonWithPermissionsFactory("delete_educationgroup")
+        cls.person.user.groups.add(CentralManagerGroupFactory())
 
     def setUp(self):
         self.education_group_year1 = EducationGroupYearFactory(

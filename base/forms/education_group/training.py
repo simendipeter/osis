@@ -23,6 +23,7 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
+
 from ajax_select import register, LookupChannel
 from ajax_select.fields import AutoCompleteSelectMultipleField
 from dal import autocomplete
@@ -209,6 +210,7 @@ class TrainingEducationGroupYearForm(EducationGroupYearModelForm):
         self.fields['rate_code'].choices = sorted(rate_code.RATE_CODE, key=lambda c: c[1])
         self.fields['main_domain'].queryset = Domain.objects.filter(type=domain_type.UNIVERSITY)\
                                                     .select_related('decree')
+
         if not self.fields['certificate_aims'].disabled:
             self.fields['section'].disabled = False
 
@@ -310,9 +312,10 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        education_group_yr_hops = getattr(kwargs.pop('instance', None), 'hops', Hops())
-        self.hops_form = self.hops_form_class(data=args[0], user=kwargs['user'],
-                                              instance=education_group_yr_hops)
+        self.education_group_yr = kwargs.pop('instance', None)
+        education_group_yr_hops = getattr(self.education_group_yr, 'hops', Hops())
+        self.hops_form = self.hops_form_class(data=args[0], user=kwargs['user'], instance=education_group_yr_hops)
+        self.user = kwargs.pop('user', None)
 
     def _post_save(self):
         self.hops_form.save(education_group_year=self.education_group_year_form.instance)
@@ -328,19 +331,6 @@ class TrainingForm(PostponementEducationGroupYearMixin, CommonBaseForm):
 
     def is_valid(self):
         return super(TrainingForm, self).is_valid() and self.hops_form.is_valid()
-
-    @property
-    def diploma_tab_fields(self):
-        return [
-            'joint_diploma', 'diploma_printing_title', 'professional_title',
-            'section', 'certificate_aims'
-        ]
-
-    def show_diploma_tab(self):
-        return any(
-            not field.disabled for field_name, field
-            in self.forms[forms.ModelForm].fields.items() if field_name in self.diploma_tab_fields
-        )
 
 
 @register('university_domains')

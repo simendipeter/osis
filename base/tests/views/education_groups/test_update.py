@@ -31,15 +31,14 @@ from unittest import mock
 from django.contrib.auth.models import Permission
 from django.contrib.messages import get_messages
 from django.core.cache import cache
-from django.core.exceptions import ValidationError, PermissionDenied
-from django.http import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from waffle.testutils import override_flag
 
 from base.forms.education_group.group import GroupYearModelForm
-from base.forms.education_group.training import CertificateAimsForm
 from base.models.enums import education_group_categories, internship_presence
 from base.models.enums.active_status import ACTIVE
 from base.models.enums.diploma_coorganization import DiplomaCoorganizationTypes
@@ -196,6 +195,13 @@ class TestUpdate(TestCase):
         self.client.force_login(self.person.user)
         permission = Permission.objects.get(codename='change_educationgroup')
         self.person.user.user_permissions.add(permission)
+        self.all_fields_enabled = mock.patch(
+            "base.forms.common.has_enabled_fields",
+            return_value=True
+        )
+        self.mocked_all_fields_enabled = self.all_fields_enabled.start()
+        self.addCleanup(self.mocked_all_fields_enabled.stop)
+        self.addCleanup(cache.clear)
 
     def test_login_required(self):
         self.client.logout()
@@ -667,8 +673,8 @@ class TestUpdate(TestCase):
         url = reverse(update_education_group, args=[egy.pk, egy.pk])
         response = self.client.post(url, data=data)
         self.assertEqual(response.status_code, HttpResponseRedirect.status_code)
-
         group.refresh_from_db()
+
         self.assertEqual(group.block, 1)
         self.assertTrue(group.is_mandatory)
         self.assertEqual(group.comment, 'COMMENT_TEST')

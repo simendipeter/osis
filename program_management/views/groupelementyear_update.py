@@ -55,6 +55,8 @@ class UpdateGroupElementYearView(GenericGroupElementYearMixin, UpdateView):
 
         kwargs["queryset"] = GroupElementYear.objects.filter(id=self.kwargs["group_element_year_id"])
 
+        kwargs['form_kwargs'] = {'user': self.request.user}
+
         return kwargs
 
     def get_context_data(self, **kwargs):

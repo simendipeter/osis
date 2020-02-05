@@ -525,3 +525,13 @@ div.dataTables_wrapper div.dataTables_processing {
     line-height: 15px !important;
     padding-left: 0 !important;
 }
+
+.no-horizontal-padding{
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.aims, .aims select{
+    width: 100% !important;
+    min-width: 60px;
+}

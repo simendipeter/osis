@@ -25,16 +25,17 @@
 ##############################################################################
 from django import forms
 from django.core.exceptions import ValidationError
-from django.forms import modelformset_factory, BaseFormSet, BaseModelFormSet
+from django.forms import modelformset_factory, BaseModelFormSet
 
 from base.models.enums import education_group_categories
 from base.models.group_element_year import GroupElementYear
 from program_management.business.group_element_years.attach import AttachEducationGroupYearStrategy, \
     AttachLearningUnitYearStrategy
 from program_management.business.group_element_years.management import CheckAuthorizedRelationshipAttach
+from rules_management.mixins import PermissionFieldMixin
 
 
-class GroupElementYearForm(forms.ModelForm):
+class GroupElementYearForm(PermissionFieldMixin, forms.ModelForm):
     class Meta:
         model = GroupElementYear
         fields = [
@@ -150,9 +151,9 @@ class BaseGroupElementYearFormset(BaseModelFormSet):
             f.save()
 
     def get_form_kwargs(self, index):
-        if self.form_kwargs:
+        if isinstance(self.form_kwargs, list):
             return self.form_kwargs[index]
-        return {}
+        return self.form_kwargs or {}
 
 
 GroupElementYearFormset = modelformset_factory(

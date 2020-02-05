@@ -50,3 +50,4 @@ class FieldReference(models.Model):
     context = models.CharField(max_length=50,  choices=enums.CONTEXT_CHOICES, blank=True)
     permissions = models.ManyToManyField(Permission, blank=True)
     groups = models.ManyToManyField(Group, blank=True)
+    category = models.CharField(max_length=50, null=True, blank=True)
