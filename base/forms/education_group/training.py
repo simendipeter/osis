@@ -124,6 +124,8 @@ class TrainingEducationGroupYearForm(EducationGroupYearModelForm):
             "education_group_type",
             "title",
             "title_english",
+            "partial_title",
+            "partial_title_english",
             "academic_year",
             "main_teaching_campus",
             "remark",

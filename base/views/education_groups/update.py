@@ -46,6 +46,7 @@ from base.forms.education_group.training import TrainingForm
 from base.models.certificate_aim import CertificateAim
 from base.models.education_group_year import EducationGroupYear
 from base.models.enums import education_group_categories
+from base.models.enums.education_group_types import TrainingType
 from base.models.group_element_year import GroupElementYear
 from base.views.common import display_success_messages, display_warning_messages, show_error_message_for_form_invalid
 from base.views.education_groups.perms import can_change_education_group
@@ -184,10 +185,14 @@ def _update_group(request, education_group_year, root, groupelementyear_formset)
     # TODO :: IMPORTANT :: Need to update form to filter on list of parents, not only on the first direct parent
     form_education_group_year = GroupForm(request.POST or None, instance=education_group_year, user=request.user)
     html_page = "education_group/update_groups.html"
-
+    has_content = len(groupelementyear_formset.queryset) > 0
     if request.method == 'POST':
-        if form_education_group_year.is_valid() and groupelementyear_formset.is_valid():
-            return _common_success_redirect(request, form_education_group_year, root, groupelementyear_formset)
+        if form_education_group_year.is_valid() and (not has_content or groupelementyear_formset.is_valid()):
+            return _common_success_redirect(
+                request,
+                form_education_group_year,
+                root, groupelementyear_formset if has_content else None
+            )
         else:
             show_error_message_for_form_invalid(request)
 
@@ -234,7 +239,8 @@ def _update_training(request, education_group_year, root, groupelementyear_forms
             person=request.user.person,
             education_group_yr=education_group_year,
         ),
-        'group_element_years': groupelementyear_formset
+        'group_element_years': groupelementyear_formset,
+        "is_finality_types": education_group_year.is_finality
     })
 
 
