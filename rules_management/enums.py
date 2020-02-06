@@ -46,4 +46,3 @@ CONTEXT_CHOICES = (
     (GROUP_PROPOSAL_MANAGEMENT, _('Group management during proposal stage')),
     (GROUP_PGRM_ENCODING_PERIOD, _('Group management during program type encoding period')),
 )
-
