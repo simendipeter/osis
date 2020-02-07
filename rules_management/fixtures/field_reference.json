@@ -4380,7 +4380,11 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": [],
+            "groups": [
+                [
+                    "program_managers"
+                ]
+            ],
             "category": "diploma"
         },
         "model": "rules_management.fieldreference"
@@ -5062,7 +5066,11 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": [],
+            "groups": [
+                [
+                    "program_managers"
+                ]
+            ],
             "category": "diploma"
         },
         "model": "rules_management.fieldreference"
