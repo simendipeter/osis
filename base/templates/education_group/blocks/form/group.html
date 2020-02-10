@@ -42,7 +42,7 @@
             <ul class="nav nav-tabs" role="tablist">
                 {% if show_identification_tab %}
                 <li role="presentation"
-                    {% if not request.GET.tab_to_show or request.GET.tab_to_show != 'content' or not show_identification_tab %}class="active"{% endif %}>
+                    {% if not request.GET.tab_to_show or request.GET.tab_to_show != 'content' or not show_content_tab %}class="active"{% endif %}>
                     <a data-toggle="tab" href="#tab_identification" role="tab">
                         {% trans 'Identification' %} <span id="spn_identification_errors" class="error"></span>
                     </a>
@@ -60,7 +60,7 @@
             <div class="tab-content">
                 {% if show_identification_tab %}
                 <div id="tab_identification"
-                     class="tab-pane {% if not request.GET.tab_to_show or request.GET.tab_to_show != 'content' %}active{% else %}fade{% endif %}">
+                     class="tab-pane {% if not request.GET.tab_to_show or request.GET.tab_to_show != 'content' or not show_content_tab %}active{% else %}fade{% endif %}">
                     <div class="row">
                         <div class="col-md-7">
                             <div class="panel panel-default">

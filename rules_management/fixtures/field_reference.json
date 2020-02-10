@@ -3656,7 +3656,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3669,7 +3670,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3689,7 +3691,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3706,7 +3709,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3719,7 +3723,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3739,7 +3744,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3756,7 +3762,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3769,7 +3776,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3786,7 +3794,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3803,7 +3812,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3816,7 +3826,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3836,7 +3847,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3853,7 +3865,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3866,7 +3879,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3886,7 +3900,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3903,7 +3918,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3916,7 +3932,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3936,7 +3953,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3953,7 +3971,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3966,7 +3985,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -3986,7 +4006,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4003,7 +4024,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4016,7 +4038,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4032,7 +4055,8 @@
             "groups": [
                 ["central_managers"],
                 ["faculty_managers"]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4049,7 +4073,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4062,7 +4087,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4082,7 +4108,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4099,7 +4126,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4112,7 +4140,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4132,7 +4161,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4149,7 +4179,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4162,7 +4193,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4182,7 +4214,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4199,7 +4232,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4212,7 +4246,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4232,7 +4267,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4249,7 +4285,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4262,7 +4299,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4282,7 +4320,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4299,7 +4338,8 @@
                 [
                     "central_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4312,7 +4352,8 @@
                 "base",
                 "educationgroupyear"
             ],
-            "groups": []
+            "groups": [],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
@@ -4332,7 +4373,8 @@
                 [
                     "faculty_managers"
                 ]
-            ]
+            ],
+            "category": "identification"
         },
         "model": "rules_management.fieldreference"
     },
