@@ -44,7 +44,7 @@ from base.models.enums.education_group_categories import TRAINING, Categories
 from base.tests.factories.academic_calendar import AcademicCalendarFactory, OpenAcademicCalendarFactory
 from base.tests.factories.academic_year import AcademicYearFactory, create_current_academic_year
 from base.tests.factories.authorized_relationship import AuthorizedRelationshipFactory
-from base.tests.factories.education_group_type import GroupEducationGroupTypeFactory
+from base.tests.factories.education_group_type import GroupEducationGroupTypeFactory, EducationGroupTypeFactory
 from base.tests.factories.education_group_year import EducationGroupYearFactory, \
     EducationGroupYearCommonBachelorFactory, TrainingFactory, MiniTrainingFactory, GroupFactory
 from base.tests.factories.person import PersonFactory, PersonWithPermissionsFactory, CentralManagerFactory, \
@@ -174,12 +174,16 @@ class TestPerms(TestCase):
         self.assertTrue(result)
 
     def test_program_manager_is_not_eligible_to_change_education_group(self):
-        result = is_eligible_to_change_education_group(
-            ProgramManagerRoleFactory(),
-            EducationGroupYearFactory(),
-            raise_exception=True
+        with self.assertRaises(PermissionDenied) as error:
+            result = is_eligible_to_change_education_group(
+                ProgramManagerRoleFactory(),
+                EducationGroupYearFactory(education_group_type=EducationGroupTypeFactory()),
+                raise_exception=True
+            )
+            self.assertFalse(result)
+        self.assertEqual(
+            str(error.exception), _('The user has not permission to change education groups.')
         )
-        self.assertFalse(result)
 
     @mock.patch('base.business.education_groups.perms._is_edition_period_open')
     def test_program_manager_is_not_eligible_to_change_group_period_closed(self, mock_period_open):
