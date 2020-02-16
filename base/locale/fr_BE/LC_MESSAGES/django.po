@@ -7,9 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-
-"POT-Creation-Date: 2020-02-04 11:14+0100\n"
-
+"POT-Creation-Date: 2020-02-16 15:21+0100\n"
 "PO-Revision-Date: 2019-04-15 08:35+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -96,8 +94,7 @@ msgstr ""
 
 #, python-format
 msgid "%(start_index)s to %(end_index)s of %(total_counts)s trainings"
-msgstr ""
-"%(start_index)s à %(end_index)s sur %(total_counts)s formations"
+msgstr "%(start_index)s à %(end_index)s sur %(total_counts)s formations"
 
 #, python-format
 msgid "%(subtype)s %(acronym)s is assigned to %(tutor)s for the year %(year)s"
@@ -2517,7 +2514,8 @@ msgstr "Soumission des fiches descriptives"
 
 msgid "Summary course submission is not allowed for tutors during this period."
 msgstr ""
-"La modification des fiches descriptives n'est pas autorisée pour les enseignants durant cette période."
+"La modification des fiches descriptives n'est pas autorisée pour les "
+"enseignants durant cette période."
 
 msgid "Suppression"
 msgstr "Suppression"
@@ -3173,6 +3171,9 @@ msgstr "Gestion des volumes"
 
 msgid "Volumes of {} are inconsistent"
 msgstr "Les volumes de {} sont incohérents"
+
+msgid "Warning this learning unit year is in many education group year"
+msgstr "Attention cette unité d'enseignement fait partie de plusieurs formations:"
 
 msgid "We detected inconsistencies in the following data :"
 msgstr "Nous avons détecté des incohérences dans les données suivantes :"

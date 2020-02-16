@@ -35,6 +35,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from waffle.decorators import waffle_flag
 
+from base import models as mdl
 from base.business import learning_unit_year_with_context
 from base.business.learning_units.edition import ConsistencyError
 from base.forms.learning_unit.edition import LearningUnitDailyManagementEndDateForm
@@ -197,7 +198,29 @@ def _save_form_and_display_messages(request, form, learning_unit_year):
             display_success_messages(request, _('The learning unit has been updated (with report).'))
         else:
             display_success_messages(request, _('The learning unit has been updated (without report).'))
-
+        group_elements_years = learning_unit_year.child_leaf.select_related(
+            "parent", "child_leaf", "parent__education_group_type"
+        ).order_by('parent__partial_acronym')
+        education_groups_years = [group_element_year.parent for group_element_year in group_elements_years]
+        formations_by_educ_group_year = mdl.group_element_year.find_learning_unit_roots(
+            education_groups_years,
+            return_result_params={
+                'parents_as_instances': True,
+                'with_parents_of_parents': True
+            },
+            luy=learning_unit_year
+        )
+        formations_by_educ_group_years = []
+        for elem in formations_by_educ_group_year:
+            if len(formations_by_educ_group_year[elem]) == 1:
+                message = "{} - {}".format(formations_by_educ_group_year[elem][0].acronym,
+                                           formations_by_educ_group_year[elem][0].title)
+                if message not in formations_by_educ_group_years:
+                    formations_by_educ_group_years.append(message)
+        if formations_by_educ_group_years:
+            formations_by_educ_group_years.insert(0,
+                                                  _("Warning this learning unit year is in many education group year"))
+        display_warning_messages(request, formations_by_educ_group_years)
     except ConsistencyError as e:
         error_list = e.error_list
         error_list.insert(0, _('The learning unit has been updated until %(year)s.')
