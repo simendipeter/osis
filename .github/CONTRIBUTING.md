@@ -1,40 +1,11 @@
 ### Commits : 
-- Ajouter un message explicite à chaque commit
-- Commiter souvent = diff limité = facilité d'identification de commits amenant une régression = facilité de revert
-
-### Lisibilité du code :
-- Séparation des classes: deux lignes vides
-- Séparation des methodes de class: une ligne vide
-- Séparation des fonctions: deux lignes vides
-- Le nom d'une fonction doit être explicite et claire sur ce qu'elle fait (un 'get_' renvoie un élément, un 'search_' renvoie une liste d'élements...)
+- Message de commit préfixé par le numéro de ticket sous la orme OSIS-XXXX
+- Commiter seln les guidelines suivantes  (+ lien vers source)
 
 ### Coding style :
 On se conforme au [guide PEP8](https://www.python.org/dev/peps/pep-0008/#indentation)
 
-Dans la mesure du possible, on essaie de tenir compte des conseils suivants : 
-- Pour représenter une structure de données (list, dict, etc.), on peut passer une ligne entre chaque élément, ainsi qu'après l'ouverture de la structure et avant sa fermeture, si la liste est longue et/ou contient de longs éléments et/ou s'étend sur plusieurs lignes.
-```python
-# Mauvais
-fruits = ['banane', 'pomme', 'poire', 'long_element_in_list_1', 'long_element_in_list_2', 'long_element_in_list_3', 'long_element_in_list_4'] 
-légumes = {'1': 'carotte', '2': 'courgette', 
-    '3': 'salade'}
-            
-# Bon
-fruits = [
-    'banane',
-    'pomme',
-    'poire',
-    'long_element_in_list_1',
-    'long_element_in_list_2',
-    'long_element_in_list_3',
-    'long_element_in_list_4'
-]
-légumes = {
-    '1': 'carotte', 
-    '2': 'courgette', 
-    '3': 'salade',
-}
-```
+- Se référer aux uidelines Django (+ lien vers source)
 
 - Le dernier élément de la structure a également une virgule. Cela permet d'éviter que cette ligne apparaisse dans le diff de git quand on rajoute un élément à la fin de structure.
 ```python
@@ -52,84 +23,107 @@ légumes = {
 }
 ```
 
-- Lors d'un appel de fonction à plusieurs paramètres, si tous les paramètres ne tiennent pas sur une ligne, on passe une ligne entre chaque paramètre, ainsi qu'après l'ouverture de la liste de paramètres et avant sa fermeture.
-```python
-# Mauvais
-result = my_function(first_long_parameter, second_parameter_which_has_a_really_really_long_name, third_parameter_which_has_an_even_longer_name)
-
-result = my_function(first_parameter, 
-                     second_parameter, 
-                     third_parameter)
-# Bon
-result = my_function(
-    first_parameter,
-    second_parameter,
-    third_parameter
-)
-```
-
-- Les règles précédentes sont cumulatives : 
-```python
-# Mauvais
-return render(request, "template.html", {
-        'students': students, 'faculties': faculties,
-        'teacher': teacher
-        })
-
-# Bon
-return render(
-    request,
-    "template.html",
-    {
-        'students': students,
-        'faculties': faculties,
-        'teacher': teacher,
-    }
-)
-```
 - Voir en plus le [Coding Style de Django](https://docs.djangoproject.com/en/1.11/internals/contributing/writing-code/coding-style/).
 
+- Utiliser des ChoiceEnum plutôt que des CONST contenant des tuples.
+Exemple : 
+```python
+from base.models.utils.utils import ChoiceEnum
+from django.utils.translation import gettext_lazy as _
+
+# Bon
+class Categories(ChoiceEnum):
+    TRAINING = _("Training")
+    MINI_TRAINING = _("Mini-Training")
+    GROUP = _("Group")
+    
+# Mauvais
+TRAINING = "TRAINING"
+MINI_TRAINING = "MINI_TRAINING"
+GROUP = "GROUP"
+CATEGORIES = (
+    (TRAINING, _("Training")),
+    (MINI_TRAINING, _("Mini-Training")),
+    (GROUP, _("Group")),
+)
+```
+
+- Les signatures de fonction doivent être typées
+- Éviter les **kwargs dans une fonction (+ lien vers source)
+- Si utilisation, toujours valeur par défaut du kwarg=None (jamais isntancier un mutable object) - cf. formation sur les kwargs 
+- Une fonction ne peut pas modifier les paramètres qu'elle reçoit (+ lien vers source)
+- Privilégier l'utilisation d'objets plutôt que de dictionnaires loesqu'on implémente un code métier (+ lien vers source)
+- "Let the code better than you found it" (+ lien vers source)
+
 ### Documentation du code :
-- Documenter les fonctions (paramètres, fonctionnement, ce qu'elle renvoie)
-- Ne pas hésiter à laisser une ligne de commentaire dans le code, décrivant brièvement le fonctionnement d'algorithme plus compliqué/plus longs
+- Tout objet public, exposé, service doit être documenté : templatetags, les API, les Mixins, les services (ddd), les objets du Domain (ddd)
+- Pour plus tard : docString structurée pour lancer des tests
+- Rédiger / rediriger vers les guidelines : https://en.wikipedia.org/wiki/Best_coding_practices et https://github.com/yetu/software-development-guidelines/blob/master/general-programming-guidelines.md
+- Ajouter Django.Model.decription sur les DjangoModelFields
 
 ### Traductions :
 - Voir https://github.com/uclouvain/osis/blob/dev/doc/technical-manual.adoc#internationalization
 - Les "Fuzzy" doivent être supprimés si la traduction du développeur diffère de la traduction proposée (le "fuzzy" signifiant que GetText a tenté de traduire la clé en retrouvant une similitude dans une autre clé).
+- Empêcher les traductions en commentaire
+- Ajouter lien vers la doc Django pour l'internationalisation
 
 ### Réutilisation du code :
-- Ne pas créer de fonctions qui renvoient plus d'un seul paramètre (perte de contrôle sur ce que fait la fonction et perte de réutilisation du code)
-- Ne pas faire de copier/coller ; tout code dupliqué ou faisant la même chose doit être implémenté dans une fonction documentée qui est réutilisable
-- Ne pas utiliser de 'magic_number' (constante non déclarée dans une variable). Par exemple, pas de -1, 1994, 2015 dans le code, mais déclarer en haut du fichier des variables sous la forme LIMIT_START_DATE=1994, LIMIT_END_DATE=2015, etc.
+- Ne pas créer de fonctions qui renvoient plus d'un seul paramètre (perte de contrôle sur ce que fait la fonction et perte de réutilisation du code) -> renvoyé des NamedTuple (Cf. Eddy pour exemple)
+- Ne pas faire de copier/coller ; tout code dupliqué ou faisant la même chose doit être implémenté dans une fonction documentée qui est réutilisable -> "Don't repeat yourself" (+ lien vers source cf. Eddy)
+- Ne pas utiliser de 'magic number' (constante non déclarée dans une variable). (+ lien vers source)
+- Ne pas utiliser de 'magic string' : utiliser des CONST ou des ChoiceEnum
 
 ### Performance :
-- Ne pas faire d'appel à la DB (pas de queryset) dans une boucle 'for' :
-    - Récupérer toutes les données nécessaires en une seule requête avant d'effectuer des opérations sur les attributs renvoyés par le Queryset
-    - Si la requête doit récupérer des données dans plusieurs tables, utiliser le select_related fourni par Django (https://docs.djangoproject.com/en/1.9/ref/models/querysets/#select-related)
-    - Forcer l'évaluation du Queryset avant d'effectuer des récupération de données avec *list(a_queryset)* 
-
-### Modèle :
+- Attetion aux queryset et boucles for : réutiliser les prefetch_related et selec_related fournis par Django (+ lien vers source).
+ 
+### Structure d'une App Osis
+- Décrire schéma d'une app Osis (models, ddd, utils, views...) (cf. Ales)
 - Chaque fichier décrivant un modèle doit se trouver dans le répertoire *'models'*
-- Chaque fichier contenant une classe du modèle ne peut renvoyer que des instances du modèle qu'elle déclare. Autrement dit, un fichier my_model.py contient une classe MyModel() et des méthodes qui ne peuvent renvoyer que des records venant de MyModel
-- Un modèle ne peut pas avoir un champs de type "ManyToMany" ; il faut toujours construire une table de liaison, qui contiendra les FK vers les modèles composant la relation ManyToMany.
-- Lorsqu'un nouveau modèle est créé (ou que de nouveaux champs sont ajoutés), il faut penser à mettre à jour l'admin en conséquence (raw_id_fields, search_fields, list_filter...). 
-- Ne pas créer de **clé étrangère** vers le modèle auth.User, mais vers **base.Person**. Cela facilite la conservation des données du modèe auth lors des écrasements des DB de Dev, Test et Qa.
+- Chaque fichier de modèle contiendra une classe du modèle, ses managers et les triggers / contraintes DB.
+- Tout champs de type "ManyToMany"  doit spécifier le "trough" ; ce modèle "throug" doit être explicite (synchro, etc)
 
-### Business :
-- Les fonctions propres à des fonctionnalités business (calculs de crédits ou volumes, etc.) doivent se trouver dans un fichier business. Ces fichiers sont utilisés par les Views et peuvent appeler des fonctions du modèle (et non l'inverse !). 
+### Modèles
+- Lorsqu'un nouveau modèle est créé (ou que de nouveaux champs sont ajoutés), il faut penser à mettre à jour l'admin en conséquence (raw_id_fields, search_fields, list_filter...) --> Réutiliser OsisModelAdmin ! 
+- Ne pas créer de **clé étrangère** vers le modèle auth.User, mais vers **base.Person**. Cela facilite la conservation des données du modèe auth lors des écrasements des DB de Dev, Test et Qa.
+- Ne pas mettre "Null" pour des valeurs textuelles (pas d'ambiguité entre chaine vide et nulle)
+- Pas de blank=True pour BooleanField 
+- Éviter l'héritage de modèles (+ lien ers source) (cf. Ales)
+- Définir méthode str pour les modèle (obbligatoire)
+- Définir un label pour les champs et classes des forms
+- Ne pas utiliser de ModelForms (cf. couche "ddd")
+- NE PAS définir de verbose_name pour les classes et champs des modèles
+- Ne pas utiliserles GenericForeignKey
+- Forcer l'utilisation de objects = models.Manager (+ lien vers source) (cf. Aless)
+
+
+### DDD: 
 - Les fonctions business ne peuvent pas recevoir l'argument 'request', qui est un argument propre aux views.
 
 ### Migration :
-- Ne pas utiliser le framework de persistence de Django lorsqu'il y a du code à exécuter dans les fichiers de migration. Il faut plutôt utiliser du SQL natif (voir https://docs.djangoproject.com/fr/1.10/topics/db/sql/ et https://docs.djangoproject.com/fr/1.10/ref/migration-operations/)
+- Un fichier de migration doit toujours écrire du code Python (RunPython) et jamais du RunSQL. Ce code Python qui 
+utilise des objets Model doit obligatoirement réutiliser get_model('app_name', 'model_name')
+- Lors d'une phase de migration (RunPython), faire une phase de reversePython. Si pas possible, faire un RunPython.noop. (+ lien vers source)
+- Les scripts doivent être écrits en python, pas en SQL.
+Il faut nécessairement faire appel à la méthode 'save()', pas à la méthode 'update()' 
+('update' ignore le auto_now et les signaux pre_save et post_save, utilisés pour mettre à jour le champs changed 
+utilisé par la synchro et pour la sérialisation des données dans les queues vers Osis-portal).
 
 ### Dépendances entre applications : 
-- Ne pas faire de références des applications principales ("base" et "reference") vers des applications tierces (Internship, assistant...)
-- Une application peut faire référence à une autre app' en cas de dépendance business (exemple: 'assessments' a besoin de 'attribution').
+- Ne pas faire de références des applications principales ("base" et "reference") vers des applications satellites (Internship, assistant...)
 
 ### Vue :
-- Ne pas faire appel à des méthodes de queryset dans les views (pas de MyModel.filter(...) ou MyModel.order_by() dans les vues). C'est la responsabilité du modèle d'appliquer des filtres et tris sur ses queryset. Il faut donc créer une fonction dans le modèle qui renvoie une liste de records filtrés sur base des paramètres entrés (find_by_(), search(), etc.).
+- Utiliser des FilterSet dans les pages de recherche
+- Privilégier la ClassBasedView à la place des Function based views (+ lien vers source)
+- Différencier les POST et GET (+lien vers source)
+- Ne pas envoyer de crsf_token dans les GET
 - Ajouter les annotations pour sécuriser les méthodes dans les vues (user_passes_tests, login_required, require_permission)
-- Les vues servent de "proxy" pour aller chercher les données nécessaires à la génération des pages html, qu'elles vont chercher dans la couche "business" ou directement dans la couche "modèle". Elles ne doivent donc pas contenir de logique business
+- Dans les classBasedViews, le LoginRequiredMixin et PermissionsMixin doit se trouver en premier éritage (performance et sécurité)
+- Si dispatch() est redéfini, d'abord appeler le super() avant d'override la fonction
+- Pas de code métier dans les views
+- Éviter d'implémenter de la logique dans les fichiers urls.py (+ lien vers source + exemple) (cf. Aless)
+- Définir les namespaces pour avoir "education_group:read" à la place de "education_group_read"
+- Utiliser "path" plutôt que url (+ lien vers source) (cf. Eddy)
+- Slugifier les urls plutôt que les ids (+ lien vers source) (cf. Aless).
 
 ### Formulaire :
 - Utiliser les objets Forms fournis par Django (https://docs.djangoproject.com/en/1.9/topics/forms/)
@@ -228,3 +222,67 @@ Idéalement lorsqu'on teste une view, on doit vérifier :
 - Les redirections en cas de succès/erreurs
 - Le contenu du contexte utilisé dans le render du template
 - Les éventuels ordres de listes attendus
+
+- Lors d'un assertEqual, la première valeur doit être la valeura tendue, la 2e doit être la valeur à tester (et on l'inverse!
+- Attention à la responsabilité des tests untiares : ils ne testent que la fonction 
+(et ses fonction privées utilisées dans la même couche), ils ne testent pas les fonctions des autres
+couches. Exemple : un test sur une View peut tester un AssertTemplateUsed, 
+mais ne teste pas Un Validator. 
+Autre ezxemple : un test sur un service peut tester la concaténation de messages d'error / succes, masi ne teste pas un Validator.
+- Créer une classe de tests par fonction
+- La structure du dossier des tests DOIT suivre la mee structure que les dossiers applicatifs.
+Exemple : program_management/ddd/domain/program_tree.py -> program_management/tests/ddd/domain/test_program_tree.py
+- Le nom d'une classe de test commence toujours par "Test", et est suivi du nom de la fonction testée en CamelCase.
+Exemple: AuthorizedRelationshipList.is_authorized -> TestIsAuthorized dans un fichier test_authorized_relationship.
+- Dans la couche ddd/Domain, Ne jamais modifier dans un test un objet créé dans le setUp (sa modification aurait un impact sur les tests suivants de la classe - à vérifier) 
+(ou plutot ne jamais utiliser de setUpClass et privilégier le setUp()?)
+
+
+
+#### Taille de PR :
+- limiter le nombre de fichiers modifés par PR à 500 lignes ?
+
+#### API / webservice
+- Tous champs utilisé dans les filter doit se trouver aussi dans le serializer (tout champs "filtre" doit se trouevr dans la donnée renvoyée)
+- Spécification Open API v3  (https://swagger.io/specification/)
+- Schéma.yml obligatoire avant développement de l'API
+- ... ?
+
+### Template tags
+- Ne peuvent pas contenir de code business
+- Doivent uniquement servir à la simplification du code html
+
+### Fonctions privées / publiques
+- Les fonctions privées sont définies via un double underscore : `def __my_private_method()`
+- Les fonctions privées sont destinées à l'usage interne d'une classe / d'un fichier. 
+Elles ne peuvent en aucun cas être importées/appelées dans d'autres modules.
+
+
+### Règles des mixins
+- Quand utiliser des mixins ?
+
+### Releases tasks
+- Penser à créer une release task en cas de modification / ajout de var d'environnement
+
+
+# Thèmes généraux pour les guidelines:
+## General guidelines
+### Programming principles 
+
+- ddd
+- patterns + liens vers références
+- comments
+
+
+### Coding styles 
+- PEP8 + lien
+- Django coding style + lien
+- Typing
+
+### Structure d'une app Osis
+
+### Webservices
+ 
+
+## Framework Django guidelines
+
