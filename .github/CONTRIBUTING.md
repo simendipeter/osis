@@ -264,6 +264,10 @@ Elles ne peuvent en aucun cas être importées/appelées dans d'autres modules.
 ### Releases tasks
 - Penser à créer une release task en cas de modification / ajout de var d'environnement
 
+### Javascript
+- Le code JS doit se trouver dans le dossier JS (et pas dans les templates)
+- À définir : structure des fichiers JS...
+
 
 # Thèmes généraux pour les guidelines:
 ## General guidelines
