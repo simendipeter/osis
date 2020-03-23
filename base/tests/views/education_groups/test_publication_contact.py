@@ -27,16 +27,18 @@ import datetime
 from http import HTTPStatus
 from unittest import mock
 
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, QueryDict
 from django.test import TestCase
 from django.urls import reverse
 
 from base.models.education_group_publication_contact import EducationGroupPublicationContact
 from base.models.enums import organization_type
+from base.models.enums.education_group_types import TrainingType
 from base.models.enums.publication_contact_type import PublicationContactType
 from base.tests.factories.academic_year import create_current_academic_year
 from base.tests.factories.education_group_publication_contact import EducationGroupPublicationContactFactory
-from base.tests.factories.education_group_year import TrainingFactory, EducationGroupYearCommonFactory
+from base.tests.factories.education_group_year import TrainingFactory, EducationGroupYearCommonFactory, \
+    EducationGroupYearMasterFactory
 from base.tests.factories.entity import EntityFactory
 from base.tests.factories.entity_version import EntityVersionFactory
 from base.tests.factories.person import CentralManagerFactory
@@ -55,7 +57,9 @@ class PublicationContactViewSetupTest(TestCase):
         cls.academic_year = create_current_academic_year()
         EducationGroupYearCommonFactory(academic_year=cls.academic_year)
 
-        cls.training = TrainingFactory(academic_year=cls.academic_year)
+        cls.training = EducationGroupYearMasterFactory(
+            academic_year=cls.academic_year,
+        )
         cls.publication_contact = EducationGroupPublicationContactFactory(
             education_group_year=cls.training,
             type=PublicationContactType.ACADEMIC_RESPONSIBLE.name
@@ -194,12 +198,22 @@ class TestPublicationContactDeleteView(PublicationContactViewSetupTest):
 
     @mock.patch("base.business.education_groups.perms.GeneralInformationPerms.is_eligible", return_value=True)
     def test_delete_assert_redirection(self, mock_permissions):
+        query_dictionary = QueryDict('', mutable=True)
+        query_dictionary.update(
+            {
+                'anchor': True
+            }
+        )
         http_referer = reverse('education_group_general_informations', args=[
             self.training.pk,
             self.training.pk,
         ])
+        response_expected = '{base_url}?{querystring}'.format(
+            base_url=http_referer,
+            querystring=query_dictionary.urlencode()
+        )
         response = self.client.post(self.url_delete, follow=True)
-        self.assertRedirects(response, http_referer)
+        self.assertRedirects(response, response_expected)
         with self.assertRaises(EducationGroupPublicationContact.DoesNotExist):
             self.publication_contact.refresh_from_db()
 

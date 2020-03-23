@@ -472,7 +472,7 @@ class TestLearningUnitPostponementFormFindConsistencyErrors(LearningUnitPostpone
         expected_result = OrderedDict({
             next_academic_year: [
                 _("%(col_name)s has been already modified. (%(new_value)s instead of %(current_value)s)") % {
-                    'col_name': _('French title proper'),
+                    'col_name': _('Specific complement (Full)'),
                     'new_value': '-',
                     'current_value': self.instance_luy_base_form.data['specific_title']
                 }
@@ -562,28 +562,6 @@ class TestLearningUnitPostponementFormFindConsistencyErrors(LearningUnitPostpone
         self.assertTrue(self.form.is_valid(), self.form.errors)
         result = self.form.consistency_errors
         self.assertDictEqual(result, expected_result)
-
-    def test_postponement_with_proposal(self):
-        next_academic_year = AcademicYear.objects.get(year=self.learning_unit_year_full.academic_year.year + 2)
-        luy = LearningUnitYear.objects.filter(
-            academic_year=next_academic_year, learning_unit=self.learning_unit_year_full.learning_unit
-        ).get()
-
-        ProposalLearningUnitFactory(learning_unit_year=luy)
-
-        msg_proposal = _("The learning unit %(luy)s is in proposal, can not save "
-                         "the change from the year %(academic_year)s") % {
-                           'luy': luy.acronym, 'academic_year': next_academic_year
-                       }
-
-        expected_result = OrderedDict({
-            next_academic_year: [msg_proposal],
-        })
-
-        self.assertTrue(self.form.is_valid(), self.form.errors)
-        result = self.form.consistency_errors
-        self.assertIsInstance(result, OrderedDict)  # Need to be ordered by academic_year
-        self.assertEqual(expected_result[next_academic_year], result[next_academic_year])
 
     def test_when_differences_found_on_additional_requirement_entities(self):
         """

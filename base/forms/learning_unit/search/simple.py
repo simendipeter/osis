@@ -29,11 +29,13 @@ from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from django_filters import FilterSet, filters, OrderingFilter
 
 from base.business.entity import get_entities_ids
+from base.forms.utils.filter_field import filter_field_by_regex
 from base.models.academic_year import AcademicYear, starting_academic_year
 from base.models.enums import quadrimesters, learning_unit_year_subtypes, active_status, learning_container_year_types
 from base.models.enums.learning_container_year_types import LearningContainerYearType
 from base.models.learning_unit_year import LearningUnitYear, LearningUnitYearQuerySet
 from base.models.proposal_learning_unit import ProposalLearningUnit
+from base.views.learning_units.search.common import SearchTypes
 
 MOBILITY = 'mobility'
 MOBILITY_CHOICE = ((MOBILITY, _('Mobility')),)
@@ -106,9 +108,16 @@ class LearningUnitFilter(FilterSet):
     )
     title = filters.CharFilter(
         field_name="full_title",
-        lookup_expr="icontains",
+        method="filter_learning_unit_year_field",
         max_length=40,
         label=_('Title'),
+    )
+    search_type = filters.CharFilter(
+        field_name="acronym",
+        method=lambda request, *args, **kwargs: request,
+        widget=forms.HiddenInput,
+        required=False,
+        initial=SearchTypes.SIMPLE_SEARCH.value
     )
 
     order_by_field = 'ordering'
@@ -164,12 +173,7 @@ class LearningUnitFilter(FilterSet):
         return queryset.filter(learning_container_year__container_type=value)
 
     def filter_entity(self, queryset, name, value):
-        with_subordinated = self.form.cleaned_data['with_entity_subordinated']
-        lookup_expression = "__".join(["learning_container_year", name, "in"])
-        if value:
-            entity_ids = get_entities_ids(value, with_subordinated)
-            queryset = queryset.filter(**{lookup_expression: entity_ids})
-        return queryset
+        return filter_by_entities(name, queryset, value, self.form.cleaned_data['with_entity_subordinated'])
 
     def get_queryset(self):
         # Need this close so as to return empty query by default when form is unbound
@@ -192,3 +196,14 @@ class LearningUnitFilter(FilterSet):
         queryset = LearningUnitYearQuerySet.annotate_full_title_class_method(queryset)
         queryset = LearningUnitYearQuerySet.annotate_entities_allocation_and_requirement_acronym(queryset)
         return queryset
+
+    def filter_learning_unit_year_field(self, queryset, name, value):
+        return filter_field_by_regex(queryset, name, value)
+
+
+def filter_by_entities(name, queryset, value, with_subordinated):
+    lookup_expression = "__".join(["learning_container_year", name, "in"])
+    if value:
+        entity_ids = get_entities_ids(value, with_subordinated)
+        queryset = queryset.filter(**{lookup_expression: entity_ids})
+    return queryset

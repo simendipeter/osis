@@ -28,12 +28,14 @@ from django.db.models import BLANK_CHOICE_DASH, OuterRef, Exists
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from django_filters import FilterSet, filters, OrderingFilter
 
+from base.forms.utils.filter_field import filter_field_by_regex
 from base.models.academic_year import AcademicYear, starting_academic_year
 from base.models.campus import Campus
 from base.models.enums import active_status
 from base.models.learning_unit_year import LearningUnitYear, LearningUnitYearQuerySet
 from base.models.organization_address import OrganizationAddress
 from base.models.proposal_learning_unit import ProposalLearningUnit
+from base.views.learning_units.search.common import SearchTypes
 from reference.models.country import Country
 
 
@@ -46,14 +48,14 @@ class ExternalLearningUnitFilter(FilterSet):
     )
     acronym = filters.CharFilter(
         field_name="acronym",
-        lookup_expr="icontains",
+        lookup_expr="iregex",
         max_length=40,
         required=False,
         label=_('Code'),
     )
     title = filters.CharFilter(
         field_name="full_title",
-        lookup_expr="icontains",
+        method="filter_learning_unit_year_field",
         max_length=40,
         label=_('Title'),
     )
@@ -82,6 +84,13 @@ class ExternalLearningUnitFilter(FilterSet):
         required=False,
         label=_("Institution"),
         help_text=_("Please select a country and a city first")
+    )
+    search_type = filters.CharFilter(
+        field_name="acronym",
+        method=lambda request, *args, **kwargs: request,
+        widget=forms.HiddenInput,
+        required=False,
+        initial=SearchTypes.EXTERNAL_SEARCH.value
     )
 
     order_by_field = 'ordering'
@@ -174,3 +183,6 @@ class ExternalLearningUnitFilter(FilterSet):
         qs = LearningUnitYearQuerySet.annotate_full_title_class_method(qs)
         qs = LearningUnitYearQuerySet.annotate_entities_allocation_and_requirement_acronym(qs)
         return qs
+
+    def filter_learning_unit_year_field(self, queryset, name, value):
+        return filter_field_by_regex(queryset, name, value)

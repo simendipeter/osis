@@ -28,14 +28,16 @@ from django.db.models import Q, OuterRef, Subquery, Exists
 from django.utils.translation import gettext_lazy as _, pgettext_lazy
 from django_filters import FilterSet, filters, OrderingFilter
 
+from base.business import event_perms
 from base.business.entity import get_entities_ids
-from base.models.academic_year import AcademicYear, starting_academic_year
+from base.models.academic_year import AcademicYear
 from base.models.entity import Entity
 from base.models.entity_version import EntityVersion
 from base.models.enums.proposal_state import ProposalState, LimitedProposalState
 from base.models.enums.proposal_type import ProposalType
 from base.models.learning_unit_year import LearningUnitYear, LearningUnitYearQuerySet
 from base.models.proposal_learning_unit import ProposalLearningUnit
+from base.views.learning_units.search.common import SearchTypes
 
 
 def _get_sorted_choices(tuple_of_choices):
@@ -61,7 +63,7 @@ class ProposalLearningUnitFilter(FilterSet):
     )
     acronym = filters.CharFilter(
         field_name="acronym",
-        lookup_expr="icontains",
+        lookup_expr="iregex",
         max_length=40,
         required=False,
         label=_('Code'),
@@ -109,6 +111,13 @@ class ProposalLearningUnitFilter(FilterSet):
         required=False,
         empty_label=pgettext_lazy("plural", "All"),
     )
+    search_type = filters.CharFilter(
+        field_name="acronym",
+        method=lambda request, *args, **kwargs: request,
+        widget=forms.HiddenInput,
+        required=False,
+        initial=SearchTypes.PROPOSAL_SEARCH.value
+    )
 
     order_by_field = 'ordering'
     ordering = ProposalLearningUnitOrderingFilter(
@@ -138,8 +147,11 @@ class ProposalLearningUnitFilter(FilterSet):
         super().__init__(*args, **kwargs)
         self.person = person
         self.queryset = self.get_queryset
-        self.form.fields["academic_year"].initial = starting_academic_year()
         self._get_entity_folder_id_linked_ordered_by_acronym(self.person)
+
+        # Academic year default value = n+1 for proposals search -> use event having n+1 as first open academic year
+        event_perm = event_perms.EventPermCreationOrEndDateProposalFacultyManager()
+        self.form.fields["academic_year"].initial = event_perm.get_academic_years().first()
 
     def _get_entity_folder_id_linked_ordered_by_acronym(self, person):
         most_recent_acronym = EntityVersion.objects.filter(
