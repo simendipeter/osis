@@ -53,6 +53,8 @@ REGEX_BY_SUBTYPE = {
     EXTERNAL: LEARNING_UNIT_ACRONYM_REGEX_EXTERNAL
 }
 
+LEARNING_UNIT_DELETION_YEAR_LIMIT = 2015
+
 
 class LearningUnitAdmin(VersionAdmin, SerializableModelAdmin):
     list_display = ('learning_container', 'acronym', 'title', 'start_year', 'end_year', 'changed')
@@ -132,8 +134,10 @@ class LearningUnit(SerializableModel):
         return self.most_recent_learning_unit_year().specific_title
 
     def delete(self, *args, **kwargs):
-        if self.start_year.year < 2015:
-            raise IntegrityError(_('Prohibition to delete a learning unit before 2015.'))
+        if self.start_year.year < LEARNING_UNIT_DELETION_YEAR_LIMIT:
+            raise IntegrityError(
+                _('Prohibition to delete a learning unit before {}.'.format(LEARNING_UNIT_DELETION_YEAR_LIMIT))
+            )
         return super().delete(*args, **kwargs)
 
     def is_past(self):
