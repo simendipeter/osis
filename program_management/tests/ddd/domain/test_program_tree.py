@@ -695,3 +695,18 @@ class TestSetPrerequisite(SimpleTestCase, ValidatorPatcherMixin):
         self.mock_validator(UpdatePrerequisiteValidatorList, ["success_message_text"], level=MessageLevel.SUCCESS)
         self.tree.set_prerequisite("LOSIS1452 OU MARC2589", self.link1.child)
         self.assertTrue(self.link1.child.prerequisite)
+
+
+class TestDescendentsNodeProgramTree(SimpleTestCase, ValidatorPatcherMixin):
+    def setUp(self):
+        root_node = NodeGroupYearFactory(node_id=0)
+        self.tree = ProgramTreeFactory(root_node=root_node)
+
+    def test_get_descendents(self):
+        self.assertEqual({}, self.tree.root_node.descendents)
+        self.mock_validator(AttachNodeValidatorList, ['Success msg'], level=MessageLevel.SUCCESS)
+        subgroup_node_1 = NodeGroupYearFactory()
+        subgroup_node_2 = NodeGroupYearFactory()
+        self.tree.attach_node(subgroup_node_1)
+        self.tree.attach_node(subgroup_node_2)
+        self.assertEqual({'0|2': subgroup_node_1, '0|3': subgroup_node_2}, self.tree.root_node.descendents)
