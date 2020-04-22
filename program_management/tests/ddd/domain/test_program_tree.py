@@ -709,4 +709,7 @@ class TestDescendentsNodeProgramTree(SimpleTestCase, ValidatorPatcherMixin):
         subgroup_node_2 = NodeGroupYearFactory()
         self.tree.attach_node(subgroup_node_1)
         self.tree.attach_node(subgroup_node_2)
-        self.assertEqual({'0|2': subgroup_node_1, '0|3': subgroup_node_2}, self.tree.root_node.descendents)
+        self.assertEqual({
+            "|".join([str(self.tree.root_node.node_id), str(subgroup_node_1.node_id)]): subgroup_node_1,
+            "|".join([str(self.tree.root_node.node_id), str(subgroup_node_2.node_id)]): subgroup_node_2
+        }, self.tree.root_node.descendents)
