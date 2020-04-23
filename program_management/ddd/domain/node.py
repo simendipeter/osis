@@ -38,7 +38,6 @@ from program_management.ddd.business_types import *
 from program_management.ddd.domain.academic_year import AcademicYear
 from program_management.ddd.domain.link import factory as link_factory
 from program_management.ddd.domain.prerequisite import Prerequisite, NullPrerequisite
-
 from program_management.models.enums.node_type import NodeType
 
 
@@ -178,6 +177,25 @@ class Node:
     def children_as_nodes(self) -> List['Node']:
         return [link.child for link in self.children]
 
+    def children_and_reference_children(
+            self,
+            except_within: Set[EducationGroupTypesEnum] = None
+    ) -> List['Link']:
+        def is_link_to_keep(link: 'Link'):
+            within_exception = except_within and link.parent.node_type in except_within
+            return link.link_type != LinkTypes.REFERENCE or within_exception
+
+        links = []
+        for link in self.children:
+            if is_link_to_keep(link):
+                links.append(link)
+            else:
+                links += link.child.children
+        return links
+
+    def get_children_and_only_reference_children_except_within_minor_list(self) -> List['Link']:
+        return self.children_and_reference_children(except_within={GroupType.MINOR_LIST_CHOICE})
+
     def get_children_types(self, include_nodes_used_as_reference=False) -> List[EducationGroupTypesEnum]:
         if not include_nodes_used_as_reference:
             return [link.child.node_type for link in self.children]
@@ -289,6 +307,7 @@ class NodeGroupYear(Node):
 class NodeLearningUnitYear(Node):
 
     type = NodeType.LEARNING_UNIT
+    node_type = NodeType.LEARNING_UNIT
 
     def __init__(
             self,
@@ -321,6 +340,7 @@ class NodeLearningUnitYear(Node):
         self.quadrimester = quadrimester
         self.volume_total_lecturing = volume_total_lecturing
         self.volume_total_practical = volume_total_practical
+        self.node_type = NodeType.LEARNING_UNIT  # Used for authorized_relationship
 
     @property
     def has_prerequisite(self) -> bool:
