@@ -25,7 +25,6 @@
 ##############################################################################
 import inspect
 from unittest.mock import patch
-from unittest import mock
 
 from django.test import SimpleTestCase
 from django.utils.translation import gettext_lazy as _
@@ -35,13 +34,12 @@ from base.models.enums.education_group_types import TrainingType, GroupType, Min
 from base.models.enums.link_type import LinkTypes
 from program_management.ddd.domain import node
 from program_management.ddd.domain.prerequisite import PrerequisiteItem
-from program_management.ddd.domain.program_tree import ProgramTree, build_path
+from program_management.ddd.domain.program_tree import ProgramTree
+from program_management.ddd.domain.program_tree import build_path
 from program_management.ddd.validators._authorized_relationship import DetachAuthorizedRelationshipValidator
 from program_management.ddd.validators.validators_by_business_action import AttachNodeValidatorList, \
-    DetachNodeValidatorList
-from program_management.ddd.domain.program_tree import ProgramTree
-from program_management.ddd.validators.validators_by_business_action import AttachNodeValidatorList, \
     UpdatePrerequisiteValidatorList
+from program_management.ddd.validators.validators_by_business_action import DetachNodeValidatorList
 from program_management.models.enums import node_type
 from program_management.tests.ddd.factories.authorized_relationship import AuthorizedRelationshipFactory
 from program_management.tests.ddd.factories.link import LinkFactory
@@ -695,3 +693,29 @@ class TestSetPrerequisite(SimpleTestCase, ValidatorPatcherMixin):
         self.mock_validator(UpdatePrerequisiteValidatorList, ["success_message_text"], level=MessageLevel.SUCCESS)
         self.tree.set_prerequisite("LOSIS1452 OU MARC2589", self.link1.child)
         self.assertTrue(self.link1.child.prerequisite)
+
+
+class TestGetNodesThatArePrerequisites(SimpleTestCase, ValidatorPatcherMixin):
+    def setUp(self):
+        self.tree = ProgramTreeFactory()
+        self.node_that_has_prerequisite = NodeLearningUnitYearFactory()
+        self.node_that_is_prerequisite = NodeLearningUnitYearFactory(is_prerequisite_of=[self.node_that_has_prerequisite])
+        self.node_that_has_prerequisite.set_prerequisite(cast_to_prerequisite(self.node_that_is_prerequisite))
+        LinkFactory(parent=self.tree.root_node, child=self.node_that_is_prerequisite)
+        self.link = LinkFactory(parent=self.tree.root_node, child=self.node_that_has_prerequisite)
+
+    def test_get_nodes_that_are_prerequisites(self):
+        self.assertEqual([self.node_that_is_prerequisite], self.tree.get_nodes_that_are_prerequisites())
+
+
+class TestGetNodesThatHasPrerequisites(SimpleTestCase, ValidatorPatcherMixin):
+    def setUp(self):
+        self.tree = ProgramTreeFactory()
+        self.node_that_has_prerequisite = NodeLearningUnitYearFactory()
+        self.node_that_is_prerequisite = NodeLearningUnitYearFactory(is_prerequisite_of=[self.node_that_has_prerequisite])
+        self.node_that_has_prerequisite.set_prerequisite(cast_to_prerequisite(self.node_that_is_prerequisite))
+        LinkFactory(parent=self.tree.root_node, child=self.node_that_is_prerequisite)
+        self.link = LinkFactory(parent=self.tree.root_node, child=self.node_that_has_prerequisite)
+
+    def test_get_nodes_that_are_prerequisites(self):
+        self.assertEqual([self.node_that_has_prerequisite], self.tree.get_nodes_that_have_prerequisites())

@@ -28,21 +28,16 @@ from collections import Counter
 from typing import List, Set, Tuple
 
 from base.models.authorized_relationship import AuthorizedRelationshipList
-from base.models.enums.education_group_types import EducationGroupTypesEnum, TrainingType, GroupType, MiniTrainingType
+from base.models.enums.education_group_types import EducationGroupTypesEnum, TrainingType, GroupType
 from osis_common.decorators.deprecated import deprecated
 from program_management.ddd.business_types import *
-from base.ddd.utils.validation_message import MessageLevel, BusinessValidationMessage
+from program_management.ddd.domain import prerequisite
 from program_management.ddd.validators._detach_root import DetachRootValidator
 from program_management.ddd.validators._path_validator import PathValidator
 from program_management.ddd.validators.validators_by_business_action import AttachNodeValidatorList, \
-    DetachNodeValidatorList
-from program_management.ddd.domain import prerequisite
-from program_management.ddd.validators.validators_by_business_action import AttachNodeValidatorList, \
     UpdatePrerequisiteValidatorList
+from program_management.ddd.validators.validators_by_business_action import DetachNodeValidatorList
 from program_management.models.enums import node_type
-
-from django.utils.translation import gettext_lazy as _
-
 from program_management.models.enums.node_type import NodeType
 
 PATH_SEPARATOR = '|'
@@ -75,13 +70,13 @@ class ProgramTree:
                     result.append(link.parent)
         return result
 
-    def get_2m_option_list(self):  # TODO :: unit tests
+    def get_2m_option_list(self):
         tree_without_finalities = self.prune(
             ignore_children_from={GroupType.FINALITY_120_LIST_CHOICE, GroupType.FINALITY_180_LIST_CHOICE}
         )
         return tree_without_finalities.root_node.get_option_list()
 
-    def get_parents(self, path: Path) -> List['Node']:  # TODO :: unit tests
+    def get_parents(self, path: Path) -> List['Node']:
         result = []
         str_nodes = path.split(PATH_SEPARATOR)
         if len(str_nodes) > 1:
@@ -148,7 +143,7 @@ class ProgramTree:
         learning_unit_nodes_contained_in_program = self.get_nodes_by_type(node_type.NodeType.LEARNING_UNIT)
         return list(sorted(node_obj.code for node_obj in learning_unit_nodes_contained_in_program))
 
-    def get_nodes_that_are_prerequisites(self) -> List['NodeLearningUnitYear']:  # TODO :: unit test
+    def get_nodes_that_are_prerequisites(self) -> List['NodeLearningUnitYear']:
         return list(
             sorted(
                 (
@@ -159,7 +154,7 @@ class ProgramTree:
             )
         )
 
-    def get_nodes_that_have_prerequisites(self) -> List['NodeLearningUnitYear']:  # TODO :: unit test
+    def get_nodes_that_have_prerequisites(self) -> List['NodeLearningUnitYear']:
         return list(
             sorted(
                 (
