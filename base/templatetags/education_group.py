@@ -230,3 +230,25 @@ def _bool_to_string(value):
         return "yes" if value else "no"
 
     return str(value)
+
+
+@register.inclusion_tag('blocks/button/li_template_lu.html')
+def link_transition_version_fill_out(version_is_candidate):
+    action = _("Fill out a version")
+
+    data_target = "#modal_fill_out_version"
+    if version_is_candidate:
+        disabled = ''
+        title = action
+    else:
+        disabled = 'disabled'
+        title = _('To fill out a version, it must be training/mini-training type, be empty, and be a transition version')
+
+    return {
+        "id": "btn_fill_out_version",
+        "class_li": disabled,
+        "title": title,
+        "text": action,
+        "id_li": "modal_fill_out_version",
+        "data_target": data_target
+    }

@@ -1,0 +1,52 @@
+{% load static i18n %}
+{% comment "License" %}
+* OSIS stands for Open Student Information System. It's an application
+* designed to manage the core business of higher education institutions,
+* such as universities, faculties, institutes and professional schools.
+* The core business involves the administration of students, teachers,
+* courses, programs and so on.
+*
+* Copyright (C) 2015-2019 Université catholique de Louvain (http://www.uclouvain.be)
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* A copy of this license - GNU General Public License - is available
+* at the root of the source code of this program.  If not,
+* see http://www.gnu.org/licenses/.
+{% endcomment %}
+<div class="modal fade" role="dialog" id="modal_fill_out_version">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{% url 'fill_out_version' root_group.id 'CEMS' %}" method="POST"  >
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <label>{% blocktrans %}Fill out the transition program of {{ offer.acronym }} in {{ offer.academic_year.year }}{% endblocktrans %}</label>
+                    <br>
+                    <br>
+                    <div id="div_originals_to_copy">
+                    </div>
+                    <br>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">{% trans 'Cancel' %}</button>
+                    <button class="btn btn-primary" type="submit" id="btn_copy_transition_version" disabled >
+                        {% trans 'Copy' %}
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+
+

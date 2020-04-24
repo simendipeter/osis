@@ -111,6 +111,11 @@
         {% url 'group_content' root_id=parent.id education_group_year_id=education_group_year.id as pdf_generate_url %}
         {% link_pdf_content_education_group pdf_generate_url %}
 
+        {% if root_group.id %}
+            <li class="divider"></li>
+            {% link_transition_version_fill_out version_is_candidate %}
+        {% endif %}
+
         <li class="divider"></li>
 
         <li>

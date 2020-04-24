@@ -105,6 +105,7 @@
     </div>
     {% if education_group_year %}
         {% include "education_group/blocks/modal/custom_xls.html" %}
+         {% include "education_group/blocks/modal/modal_fill_out_version.html" %}
     {% endif %}
     <script>
         const tree = JSON.parse('{{ tree | escapejs }}');

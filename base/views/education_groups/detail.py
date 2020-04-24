@@ -79,6 +79,7 @@ from program_management.forms.custom_xls import CustomXlsForm
 from program_management.models.enums import node_type
 from program_management.serializers.program_tree_view import program_tree_view_serializer
 from webservices.business import CONTACT_INTRO_KEY
+from base.models.enums.education_group_categories import Categories
 
 SECTIONS_WITH_TEXT = (
     'ucl_bachelors',
@@ -178,6 +179,10 @@ class EducationGroupGenericDetailView(PermissionRequiredMixin, DetailView, Catal
                 self.object.id,
                 node_type.NodeType.EDUCATION_GROUP
             )
+            # TODO : ajouter le fait que l'arbre soit vide. On redéfini un méthode
+            #  len (https://python.developpez.com/cours/DiveIntoPython/php/frdiveintopython/object_oriented_framework/special_class_methods2.php - Point 3) Au niveau du ProgramTree. De cette manière, si on fait len(version.tree) == 0
+            context['version_is_candidate'] = self.current_version.is_transition and self.current_version.root_group.education_group_type.category in (Categories.TRAINING.name, Categories.MINI_TRAINING.name)
+
         context['group_to_parent'] = self.request.GET.get("group_to_parent") or '0'
         context['can_change_education_group'] = self.request.user.has_perm(
             'base.change_educationgroup',

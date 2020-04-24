@@ -41,6 +41,8 @@ from program_management.ddd.repositories import load_node, load_prerequisite, \
 # Typing
 from program_management.ddd.repositories.load_prerequisite import TreeRootId, NodeId
 from program_management.models.enums.node_type import NodeType
+from program_management.models.education_group_version import EducationGroupVersion
+from django.db.models import Q
 
 GroupElementYearColumnName = str
 LinkKey = str  # <parent_id>_<child_id>  Example : "123_124"
@@ -217,3 +219,22 @@ def __build_children(
         link_node.child = child_node
         children.append(link_node)
     return children
+
+
+def find_all_program_tree_versions_to_copy(acronym: str, previous_year: int, year: int) -> List['ProgramTreeVersion']:
+    qs = EducationGroupVersion.objects.filter(Q(offer__acronym=acronym, offer__academic_year__year=previous_year) |
+                                              Q(offer__acronym=acronym, offer__academic_year__year=year, version_name='')).select_related('offer').order_by('version_name')
+
+    results = []
+
+    for elt in qs:
+        elem = {
+            'is_transition': elt.is_transition,
+            'version_name': elt.version_name,
+            'offer': elt.offer,
+            'title_fr': elt.title_fr,
+            'title_en': elt.title_en,
+            'root_group': elt.root_group
+        }
+        results.append(ProgramTreeVersion(**elem, tree=False))
+    return results

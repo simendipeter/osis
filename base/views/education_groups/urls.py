@@ -35,6 +35,7 @@ from base.views.education_groups.select import copy_education_group_to_cache, co
 from base.views.education_groups.update import CertificateAimAutocomplete
 from . import search, create, detail, update, delete
 from .achievement.urls import urlpatterns as urlpatterns_achievement
+from education_group.views.fill_out import fill_out_version, check_available_versions_for_copy
 
 urlpatterns = [
     url(
@@ -88,7 +89,12 @@ urlpatterns = [
         create.SelectEducationGroupTypeView.as_view(),
         name='select_education_group_type'
     ),
-
+    url(
+        r'^available_versions_for_copy/(?P<acronym>[A-Za-z0-9]+)/(?P<year>[0-9]+)/$',
+        check_available_versions_for_copy,
+        name='available_versions_for_copy'
+    ),
+    url(r'^(?P<root_group_id>[0-9]+)/(?P<version_name>[A-Za-z-]+)/fill_out_version/$', fill_out_version, name='fill_out_version'),
     url(r'^(?P<root_id>[0-9]+)/(?P<education_group_year_id>[0-9]+)/', include([
 
         url(r'^identification/$', detail.EducationGroupRead.as_view(), name='education_group_read'),
