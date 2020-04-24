@@ -277,6 +277,9 @@ class ProgramTree:
         validator = DetachNodeValidatorList(self, node_to_detach, path_to_parent)
         return validator.is_valid(), validator.messages
 
+    def is_empty(self):
+        return self.authorized_relationships.get_authorized_relationship_is_empty()
+
 
 def _nodes_from_root(root: 'Node') -> List['Node']:
     nodes = [root]

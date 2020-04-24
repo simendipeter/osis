@@ -103,3 +103,12 @@ class AuthorizedRelationshipList:
             auth_rel.child_type for auth_rel in self.authorized_relationships
             if auth_rel.parent_type == parent_type
         )
+
+    def get_authorized_relationship_is_empty(
+            self
+    ) -> AuthorizedRelationshipObject:
+
+        for auth_rel in self.authorized_relationships:
+            if auth_rel.min_count_authorized > 1:
+                return False
+        return True

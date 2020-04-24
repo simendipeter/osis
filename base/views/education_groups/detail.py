@@ -179,9 +179,7 @@ class EducationGroupGenericDetailView(PermissionRequiredMixin, DetailView, Catal
                 self.object.id,
                 node_type.NodeType.EDUCATION_GROUP
             )
-            # TODO : ajouter le fait que l'arbre soit vide. On redéfini un méthode
-            #  len (https://python.developpez.com/cours/DiveIntoPython/php/frdiveintopython/object_oriented_framework/special_class_methods2.php - Point 3) Au niveau du ProgramTree. De cette manière, si on fait len(version.tree) == 0
-            context['version_is_candidate'] = self.current_version.is_transition and self.current_version.root_group.education_group_type.category in (Categories.TRAINING.name, Categories.MINI_TRAINING.name)
+            context['version_is_candidate'] = self.current_version.is_transition and self.current_version.root_group.education_group_type.category in (Categories.TRAINING.name, Categories.MINI_TRAINING.name) and program_tree_version.tree.is_empty()
 
         context['group_to_parent'] = self.request.GET.get("group_to_parent") or '0'
         context['can_change_education_group'] = self.request.user.has_perm(
