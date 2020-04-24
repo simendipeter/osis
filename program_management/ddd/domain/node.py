@@ -211,7 +211,7 @@ class Node:
         return list_child_nodes_types
 
     @property
-    def descendents(self) -> Dict['Path', 'Node']:   # TODO :: add unit tests
+    def descendents(self) -> Dict['Path', 'Node']:
         return _get_descendents(self)
 
     def add_child(self, node: 'Node', **link_attrs):
