@@ -34,7 +34,7 @@ from base.models.enums.quadrimesters import DerogationQuadrimester
 from base.models.learning_component_year import LearningComponentYear
 from base.models.learning_unit_year import LearningUnitYear as LearningUnitYearModel
 from learning_unit.ddd.domain.learning_unit_year import LearningUnitYear, LecturingVolume, PracticalVolume
-
+from learning_unit.ddd.repository.load_teaching_material import load_teaching_materials
 
 def __instanciate_volume_domain_object(learn_unit_data: dict) -> dict:
     learn_unit_data['lecturing_volume'] = LecturingVolume(total_annual=learn_unit_data.pop('pm_vol_tot'))
@@ -90,6 +90,12 @@ def load_multiple(learning_unit_year_ids: List[int]) -> List['LearningUnitYear']
         'pm_vol_tot',
         'pp_vol_tot',
     )
+    results = []
+    for learnin_unit_data in qs:
+        luy = LearningUnitYear(**__instanciate_volume_domain_object(__convert_string_to_enum(learnin_unit_data)))
+        luy.teaching_materials = load_teaching_materials(luy.acronym, luy.year)
+        results.append(luy)
+    return results
 
     return [
         LearningUnitYear(
