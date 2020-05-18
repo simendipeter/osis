@@ -57,7 +57,7 @@ def _get_node_view_attribute_serializer(link: 'Link', path: 'Path', context=None
         'element_id': link.child.pk,
         'element_type': link.child.type.name,
         'title': link.child.code,
-        'attach_url': reverse('education_group_attach', args=[context['root'].pk, link.child.pk]),
+        'attach_url': reverse('education_group_attach', args=[context['root'].pk, link.child.pk]) + "?path=%s" % path,
         'detach_url': reverse('tree_detach_node', args=[context['root'].pk]) + "?path=%s" % path,
         'modify_url': reverse('group_element_year_update', args=[context['root'].pk, link.child.pk, link.pk]),
         'attach_disabled': False,
@@ -66,7 +66,7 @@ def _get_node_view_attribute_serializer(link: 'Link', path: 'Path', context=None
         'detach_msg': None,
         'modification_disabled': False,
         'modification_msg': None,
-        'search_url': reverse('quick_search_education_group', args=[context['root'].pk, link.child.pk]),
+        'search_url': reverse('quick_search_education_group', args=[context['root'].pk, path]),
     }
 
 
@@ -76,6 +76,7 @@ def _get_leaf_view_attribute_serializer(link: 'Link', path: str, context=None) -
         'path': path,
         'icon': None,
         'href': reverse('learning_unit_utilization', args=[context['root'].pk, link.child.pk]),
+        'attach_url': None,
         'has_prerequisite': link.child.has_prerequisite,
         'is_prerequisite': link.child.is_prerequisite,
         'css_class': __get_css_class(link),
@@ -108,6 +109,7 @@ def __get_title(obj: 'Link') -> str:
 
 def _get_node_view_serializer(link: 'Link', path: str, context=None) -> dict:
     return {
+        'id': path,
         'path': path,
         'icon': _get_group_node_icon(link),
         'text': '%(code)s - %(title)s' % {'code': link.child.code, 'title': link.child.title},
@@ -128,6 +130,7 @@ def _get_group_node_icon(obj: 'Link'):
 
 def _leaf_view_serializer(link: 'Link', path: str, context=None) -> dict:
     return {
+        'id': path,
         'path': path,
         'icon': __get_learning_unit_node_icon(link),
         'text': __get_learning_unit_node_text(link, context=context),
