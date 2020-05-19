@@ -39,8 +39,6 @@ from program_management.ddd.domain import program_tree
 from program_management.ddd.domain.prerequisite import PrerequisiteItem
 from program_management.ddd.domain.program_tree import ProgramTree
 from program_management.ddd.domain.program_tree import build_path
-from program_management.ddd.validators._authorized_relationship import DetachAuthorizedRelationshipValidator
-from program_management.ddd.domain.program_tree import build_path
 from program_management.ddd.service import command
 from program_management.ddd.validators._authorized_relationship import DetachAuthorizedRelationshipValidator
 from program_management.ddd.validators.validators_by_business_action import AttachNodeValidatorList, \

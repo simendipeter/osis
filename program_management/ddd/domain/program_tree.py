@@ -29,12 +29,10 @@ from typing import List, Set, Tuple, Optional
 
 from base.models.authorized_relationship import AuthorizedRelationshipList
 from base.models.enums.education_group_types import EducationGroupTypesEnum, TrainingType, GroupType
-from base.models.enums.education_group_types import EducationGroupTypesEnum, TrainingType, GroupType
 from base.models.enums.link_type import LinkTypes
 from osis_common.ddd import interface
 from osis_common.decorators.deprecated import deprecated
 from program_management.ddd.business_types import *
-from program_management.ddd.domain import prerequisite
 from program_management.ddd.domain import prerequisite
 from program_management.ddd.service import command
 from program_management.ddd.validators._detach_root import DetachRootValidator
