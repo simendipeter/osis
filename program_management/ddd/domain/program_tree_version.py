@@ -90,3 +90,8 @@ class ProgramTreeVersionIdentity(interface.EntityIdentity):
                and self.year == other.year \
                and self.version_name == other.version_name \
                and self.is_transition == other.is_transition
+
+
+class ProgramTreeVersionNotFoundException(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__("The program version cannot be found")
