@@ -191,7 +191,7 @@ class EducationGroupGenericDetailView(PermissionRequiredMixin, DetailView, Catal
         context['enums'] = mdl.enums.education_group_categories
         context['current_academic_year'] = self.starting_academic_year
         context['selected_element_clipboard'] = self.get_selected_element_for_clipboard()
-        context['form_xls_custom'] = CustomXlsForm()
+        context['form_xls_custom'] = CustomXlsForm(node=self.node)
         return context
 
     def get(self, request, *args, **kwargs):

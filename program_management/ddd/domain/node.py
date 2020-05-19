@@ -24,9 +24,9 @@
 #
 ##############################################################################
 from _decimal import Decimal
-from collections import OrderedDict
 from typing import List, Set, Dict
 
+from base.models.enums.active_status import ActiveStatusEnum
 from base.models.enums.education_group_categories import Categories
 from base.models.enums.education_group_types import EducationGroupTypesEnum, TrainingType, MiniTrainingType, GroupType
 from base.models.enums.learning_container_year_types import LearningContainerYearType
@@ -34,8 +34,8 @@ from base.models.enums.learning_unit_year_periodicity import PeriodicityEnum
 from base.models.enums.link_type import LinkTypes
 from base.models.enums.proposal_type import ProposalType
 from base.models.enums.quadrimesters import DerogationQuadrimester
+from base.models.enums.schedule_type import ScheduleTypeEnum
 from education_group.models.enums.constraint_type import ConstraintTypes
-from osis_common.ddd import interface
 from program_management.ddd.business_types import *
 from program_management.ddd.domain.academic_year import AcademicYear
 from program_management.ddd.domain.link import factory as link_factory
@@ -58,19 +58,7 @@ class NodeFactory:
 factory = NodeFactory()
 
 
-class NodeIdentity(interface.EntityIdentity):
-    def __init__(self, code: str, year: int):
-        self.code = code
-        self.year = year
-
-    def __hash__(self):
-        return hash(self.code + str(self.year))
-
-    def __eq__(self, other):
-        return self.code == other.code and self.year == other.year
-
-
-class Node(interface.Entity):
+class Node:
 
     _academic_year = None
 
@@ -101,8 +89,6 @@ class Node(interface.Entity):
         self.year = year
         self.credits = credits
         self._deleted_children = set()
-        # FIXME :: pass entity_id into the __init__ param !
-        super(Node, self).__init__(entity_id=NodeIdentity(self.code, self.year))
 
     def __eq__(self, other):
         return (self.node_id, self.__class__) == (other.node_id,  other.__class__)
@@ -149,12 +135,6 @@ class Node(interface.Entity):
 
     def is_option(self) -> bool:
         return self.node_type == MiniTrainingType.OPTION
-
-    def is_training(self) -> bool:
-        return self.node_type in TrainingType.all()
-
-    def is_minor_major_list_choice(self) -> bool:
-        return self.node_type in GroupType.minor_major_list_choice_enums()
 
     def get_all_children(
             self,
@@ -251,7 +231,7 @@ class Node(interface.Entity):
 
 
 def _get_descendents(root_node: Node, current_path: 'Path' = None) -> Dict['Path', 'Node']:
-    _descendents = OrderedDict()
+    _descendents = {}
     if current_path is None:
         current_path = str(root_node.pk)
 
@@ -264,6 +244,7 @@ def _get_descendents(root_node: Node, current_path: 'Path' = None) -> Dict['Path
     return _descendents
 
 
+# TODO: Remove this class because unused when migration is done
 class NodeEducationGroupYear(Node):
 
     type = NodeType.EDUCATION_GROUP
@@ -306,11 +287,20 @@ class NodeGroupYear(Node):
         max_constraint: int = None,
         remark_fr: str = None,
         remark_en: str = None,
+        start_year: int = None,
+        end_year: int = None,
         offer_title_fr: str = None,
         offer_title_en: str = None,
+        group_title_fr: str = None,
+        group_title_en: str = None,
         offer_partial_title_fr: str = None,
         offer_partial_title_en: str = None,
-        category: Categories = None,
+        category: GroupType = None,
+        management_entity_acronym: str = None,
+        teaching_campus: str = None,
+        schedule_type: ScheduleTypeEnum = None,
+        offer_status: ActiveStatusEnum = None,
+        keywords: str = None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -319,11 +309,20 @@ class NodeGroupYear(Node):
         self.max_constraint = max_constraint
         self.remark_fr = remark_fr
         self.remark_en = remark_en
+        self.start_year = start_year
+        self.end_date = end_year
         self.offer_title_fr = offer_title_fr
         self.offer_title_en = offer_title_en
+        self.group_title_fr = group_title_fr
+        self.group_title_en = group_title_en
         self.offer_partial_title_fr = offer_partial_title_fr
         self.offer_partial_title_en = offer_partial_title_en
+        self.offer_status = offer_status
+        self.schedule_type = schedule_type
+        self.keywords = keywords
         self.category = category
+        self.management_entity_acronym = management_entity_acronym
+        self.teaching_campus = teaching_campus
 
 
 class NodeLearningUnitYear(Node):

@@ -44,6 +44,10 @@ class CustomXlsForm(forms.Form):
     specifications = forms.BooleanField(required=False, label=_('Specifications'))
     description_fiche = forms.BooleanField(required=False, label=_('Description fiche'))
 
+    def __init__(self, *args, node: 'Node' = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.node = node.node_id if node else None
+
     def get_optional_data(self):
         data = []
         if self.is_valid():
