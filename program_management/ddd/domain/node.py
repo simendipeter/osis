@@ -52,6 +52,16 @@ class NodeFactory:
             NodeType.LEARNING_UNIT: NodeLearningUnitYear,
             NodeType.LEARNING_CLASS: NodeLearningClassYear
         }[type]
+
+        node_attrs.pop('start_year')
+        node_attrs.pop('end_year')
+        node_attrs.pop('management_entity_acronym')
+        node_attrs.pop('teaching_campus')
+        node_attrs.pop('offer_status')
+        node_attrs.pop('schedule_type')
+        node_attrs.pop('keywords')
+        node_attrs.pop('group_title_fr')
+        node_attrs.pop('group_title_en')
         return node_cls(**node_attrs)
 
 

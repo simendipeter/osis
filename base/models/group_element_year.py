@@ -401,7 +401,7 @@ class GroupElementYear(OrderedModel):
     objects = GroupElementYearManager()
 
     def __str__(self):
-        return "{} - {}".format(self.parent, self.child)
+        return "{} - {}".format(self.parent_element, self.child_element)
 
     @property
     def verbose_comment(self):
