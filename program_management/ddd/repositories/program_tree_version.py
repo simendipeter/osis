@@ -51,7 +51,10 @@ class ProgramTreeVersionRepository(interface.AbstractRepository):
                                                           offer__academic_year__year__gte=entity_id.year,
                                                           version_name=entity_id.version_name,
                                                           is_transition=entity_id.is_transition)
+        #TODO je pense que le validator doit être appelé ailleurs
+        # if DeleteVersionValidator(education_group_versions=education_group_versions).validate():
         _delete_version_trees(education_group_versions)
+
         return None
 
     @classmethod
