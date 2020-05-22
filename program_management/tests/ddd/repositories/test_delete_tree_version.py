@@ -70,14 +70,14 @@ class TestDeleteVersion(TestCase):
                                               version_name=education_group_version_to_delete.version_name,
                                               is_transition=education_group_version_to_delete.is_transition)
         ProgramTreeVersionRepository.delete(entity_id=identity)
-        expected_for_academic_yr = self.data.get(self.academic_year)
-        expected_for_previous_academic_yr = self.data.get(self.previous_academic_year)
+        expected_for_ac_yr = self.data.get(self.academic_year)
+        expected_for_previous_ac_yr = self.data.get(self.previous_academic_year)
 
         self.assertEqual_remaining_records(
-            expected_for_academic_yr.get('group_element_years') + expected_for_previous_academic_yr.get(GROUP_ELEMENT_YEARS),
-            expected_for_academic_yr.get('elements') + expected_for_previous_academic_yr.get(ELEMENTS),
-            expected_for_academic_yr.get('group_years') + expected_for_previous_academic_yr.get(GROUP_YEARS),
-            [expected_for_academic_yr.get('education_group_version'), expected_for_previous_academic_yr.get(EDUCATION_GROUP_VERSION)]
+            expected_for_ac_yr.get(GROUP_ELEMENT_YEARS) + expected_for_previous_ac_yr.get(GROUP_ELEMENT_YEARS),
+            expected_for_ac_yr.get(ELEMENTS) + expected_for_previous_ac_yr.get(ELEMENTS),
+            expected_for_ac_yr.get(GROUP_YEARS) + expected_for_previous_ac_yr.get(GROUP_YEARS),
+            [expected_for_ac_yr.get(EDUCATION_GROUP_VERSION), expected_for_previous_ac_yr.get(EDUCATION_GROUP_VERSION)]
         )
 
     def test_delete_version_keep_previous_year(self):
@@ -116,80 +116,6 @@ class TestDeleteVersion(TestCase):
         self.assertListEqual(list(results), group_years)
         results = EducationGroupVersion.objects.all()
         self.assertEqual(list(results), education_group_versions)
-
-
-# class TestDeleteTreeVersion(TestCase):
-#
-#     def setUp(self):
-#         """
-#             (education_group_version)
-#             root_node
-#             |-link_level_1
-#               |-link_level_2
-#                 |-- leaf
-#         """
-#         self.data = {}
-#         self.academic_year = AcademicYearFactory()
-#         self.previous_academic_year = AcademicYearFactory(year=self.academic_year.year - 1)
-#         self.next_academic_year = AcademicYearFactory(year=self.academic_year.year+1)
-#
-#         self.data.update(build_version_content(self.academic_year))
-#         self.data.update(build_version_content(self.next_academic_year))
-#         self.data.update(build_version_content(self.previous_academic_year))
-#
-#     def test_delete_version_last_year_only(self):
-#         education_group_version_to_delete = self.data.get(self.next_academic_year).get(EDUCATION_GROUP_VERSION)
-#         identity = ProgramTreeVersionIdentity(offer_acronym=education_group_version_to_delete.offer.acronym,
-#                                               year=education_group_version_to_delete.offer.academic_year.year,
-#                                               version_name=education_group_version_to_delete.version_name,
-#                                               is_transition=education_group_version_to_delete.is_transition)
-#         ProgramTreeVersionRepository.delete_with_tree(entity_id=identity)
-#         expected_for_academic_yr = self.data.get(self.academic_year)
-#         expected_for_previous_academic_yr = self.data.get(self.previous_academic_year)
-#
-#         self.assertEqual_remaining_records(
-#             expected_for_academic_yr.get('group_element_years') + expected_for_previous_academic_yr.get(GROUP_ELEMENT_YEARS),
-#             expected_for_academic_yr.get('elements') + expected_for_previous_academic_yr.get(ELEMENTS),
-#             expected_for_academic_yr.get('group_years') + expected_for_previous_academic_yr.get(GROUP_YEARS),
-#             [expected_for_academic_yr.get('education_group_version'), expected_for_previous_academic_yr.get(EDUCATION_GROUP_VERSION)]
-#         )
-#
-#     def test_delete_version_keep_previous_year(self):
-#         education_group_version_to_delete = self.data.get(self.academic_year).get('education_group_version')
-#         identity = ProgramTreeVersionIdentity(offer_acronym=education_group_version_to_delete.offer.acronym,
-#                                               year=education_group_version_to_delete.offer.academic_year.year,
-#                                               version_name=education_group_version_to_delete.version_name,
-#                                               is_transition=education_group_version_to_delete.is_transition)
-#         ProgramTreeVersionRepository.delete_with_tree(entity_id=identity)
-#         results_expected_for_previous_academic_year = self.data.get(self.previous_academic_year)
-#
-#         self.assertEqual_remaining_records(results_expected_for_previous_academic_year.get(GROUP_ELEMENT_YEARS),
-#                                            results_expected_for_previous_academic_year.get(ELEMENTS),
-#                                            results_expected_for_previous_academic_year.get(GROUP_YEARS),
-#                                            [results_expected_for_previous_academic_year.get(EDUCATION_GROUP_VERSION)])
-#
-#     def test_delete_version_all_years(self):
-#         education_group_version_to_delete = self.data.get(self.previous_academic_year).get(EDUCATION_GROUP_VERSION)
-#         identity = ProgramTreeVersionIdentity(offer_acronym=education_group_version_to_delete.offer.acronym,
-#                                               year=education_group_version_to_delete.offer.academic_year.year,
-#                                               version_name=education_group_version_to_delete.version_name,
-#                                               is_transition=education_group_version_to_delete.is_transition)
-#         ProgramTreeVersionRepository.delete_with_tree(entity_id=identity)
-#
-#         self.assertEqual_remaining_records([],
-#                                            [],
-#                                            [],
-#                                            [])
-#
-#     def assertEqual_remaining_records(self, group_element_years, elements, group_years, education_group_versions):
-#         results = GroupElementYear.objects.all()
-#         self.assertListEqual(list(results), group_element_years)
-#         results = Element.objects.all()
-#         self.assertListEqual(list(results), elements)
-#         results = GroupYear.objects.all()
-#         self.assertListEqual(list(results), group_years)
-#         results = EducationGroupVersion.objects.all()
-#         self.assertEqual(list(results), education_group_versions)
 
 
 def build_version_content(academic_year):
