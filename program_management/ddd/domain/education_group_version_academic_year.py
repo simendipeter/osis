@@ -23,40 +23,10 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
-from osis_common.ddd import interface
 
 
-class AttachNodeCommand(interface.CommandRequest):
-    # To implement
-    pass
+class EducationGroupVersionAcademicYear:
 
-
-class DetachNodeCommand(interface.CommandRequest):
-    # To implement
-    pass
-
-
-class OrderLinkCommand(interface.CommandRequest):
-    # To implement
-    pass
-
-
-class CreateProgramTreeVersionCommand(interface.CommandRequest):
-    # To implement
-    pass
-
-
-class DeleteProgramTreeVersionCommand(interface.CommandRequest):
-
-    def __init__(
-            self,
-            offer_acronym: str,
-            year: int,
-            version_name: str,
-            is_transition: bool,
-
-    ):
-        self.offer_acronym = offer_acronym
-        self.year = year
-        self.version_name = version_name
-        self.is_transition = is_transition
+    def __init__(self, educationgroupversion):
+        self.academic_year = educationgroupversion.root_group.academic_year
+        self.root_group = educationgroupversion.root_group
