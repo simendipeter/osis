@@ -53,14 +53,30 @@ class ProgramTreeVersionBuilder:
         raise NotImplementedError()
 
 
+
 class ProgramTreeVersion(interface.RootEntity):
 
     def __init__(
             self,
             entity_identity: 'ProgramTreeVersionIdentity',
+            program_tree_identity: 'ProgramTreeIdentity',
+            program_tree_repository: 'ProgramTreeRepository',
+            title_fr: str = None,
+            title_en: str = None,
+            tree: 'ProgramTree' = None
     ):
         super(ProgramTreeVersion, self).__init__(entity_id=entity_identity)
         self.entity_id = entity_identity
+        self.program_tree_identity = program_tree_identity
+        self.program_tree_repository = program_tree_repository
+        self.title_fr = title_fr
+        self.title_en = title_en
+        self._tree = tree
+
+    def get_tree(self) -> 'ProgramTree':
+        if not self._tree:
+            self._tree = self.program_tree_repository.get(self.program_tree_identity)
+        return self._tree
 
     @property
     def is_standard(self):
@@ -73,6 +89,13 @@ class ProgramTreeVersion(interface.RootEntity):
     @property
     def version_name(self) -> str:
         return self.entity_id.version_name
+
+    @property
+    def version_label(self):  # TODO :: to remove
+        if self.is_standard:
+            return 'Transition' if self.is_transition else ''
+        else:
+            return '{}-Transition'.format(self.version_name) if self.is_transition else self.version_name
 
 
 class ProgramTreeVersionIdentity(interface.EntityIdentity):
