@@ -34,6 +34,7 @@ from program_management.ddd.domain.program_tree import ProgramTreeIdentity
 from program_management.ddd.domain.program_tree_version import ProgramTreeVersion
 from program_management.ddd.domain.program_tree_version import ProgramTreeVersionIdentity
 from program_management.ddd.repositories.program_tree import ProgramTreeRepository
+from program_management.ddd.repositories import load_tree
 
 
 class ProgramTreeVersionRepository(interface.AbstractRepository):
@@ -47,8 +48,13 @@ class ProgramTreeVersionRepository(interface.AbstractRepository):
         raise NotImplementedError
 
     @classmethod
-    def get(cls, entity_id: ProgramTreeVersionIdentity) -> 'ProgramTreeVersion':
-        raise NotImplementedError
+    def get(cls, entity_id: 'ProgramTreeVersionIdentity') -> 'ProgramTreeVersion':
+        return load_tree.load_version(
+            entity_id.offer_acronym,
+            entity_id.year,
+            entity_id.version_name,
+            entity_id.is_transition,
+        )
 
     @classmethod
     def search(

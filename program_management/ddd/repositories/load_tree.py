@@ -44,6 +44,8 @@ from program_management.ddd.repositories import load_node, load_prerequisite, \
 from program_management.ddd.repositories.load_prerequisite import TreeRootId, NodeId
 from program_management.ddd.repositories.program_tree import ProgramTreeRepository
 from program_management.models.education_group_version import EducationGroupVersion
+from program_management.ddd.domain.program_tree_version import ProgramTreeVersionIdentity
+from program_management.ddd.domain.program_tree import ProgramTreeIdentity
 
 GroupElementYearColumnName = str
 LinkKey = str  # <parent_id>_<child_id>  Example : "123_124"
@@ -53,6 +55,7 @@ TreeStructure = List[Dict[GroupElementYearColumnName, Any]]
 
 @deprecated  # use ProgramTreeVersionRepository.get() instead
 def load_version(acronym: str, year: int, version_name: str, transition: bool) -> 'ProgramTreeVersion':
+
     try:
         education_group_version = EducationGroupVersion.objects\
             .filter(root_group__element__isnull=False)\
@@ -258,8 +261,8 @@ def __instanciate_from_education_group_version(educ_group_version: EducationGrou
         identity,
         tree_identity,
         ProgramTreeRepository(),
-        title_en=elt.title_en,
-        title_fr=elt.title_fr,
+        title_en="elt.title_en",
+        title_fr="elt.title_fr",
     )
 
 

@@ -95,25 +95,25 @@ def get_protected_messages_by_education_group_year(education_group_year):
     return protected_message
 
 
-def _have_contents_which_are_not_mandatory(education_group_year):
+def _have_contents_which_are_not_mandatory(group_year):
     """
     An education group year is empty if:
         - it has no children
         - all of his children are mandatory groups and they are empty [=> Min 1]
     """
     mandatory_groups = AuthorizedRelationship.objects.filter(
-        parent_type=education_group_year.education_group_type,
+        parent_type=group_year.education_group_type,
         min_count_authorized=1
     ).values_list('child_type', 'min_count_authorized')
 
     children_count = GroupElementYear.objects \
-        .filter(parent=education_group_year) \
-        .values('child_branch__education_group_type') \
-        .annotate(count=Count('child_branch__education_group_type')) \
-        .values_list('child_branch__education_group_type', 'count')
+        .filter(parent_element__group_year=group_year) \
+        .values('child_element__group_year__education_group_type') \
+        .annotate(count=Count('child_element__group_year__education_group_type')) \
+        .values_list('child_element__group_year__education_group_type', 'count')
 
     _have_content = bool(Counter(children_count) - Counter(mandatory_groups))
     if not _have_content:
-        children_qs = GroupElementYear.objects.filter(parent=education_group_year)
-        _have_content = any(_have_contents_which_are_not_mandatory(child.child_branch) for child in children_qs)
+        children_qs = GroupElementYear.objects.filter(parent_element__group_year=group_year)
+        _have_content = any(_have_contents_which_are_not_mandatory(child.child_element__group_year) for child in children_qs)
     return _have_content

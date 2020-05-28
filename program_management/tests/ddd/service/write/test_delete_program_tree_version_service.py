@@ -23,7 +23,7 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
-
+from unittest import mock
 from django.test import TestCase
 
 from base.models.group_element_year import GroupElementYear
@@ -63,6 +63,7 @@ class TestDeleteVersion(TestCase):
         self.data.update(build_version_content(self.academic_year))
         self.data.update(build_version_content(self.next_academic_year))
         self.data.update(build_version_content(self.previous_academic_year))
+
 
     def test_delete_version_last_year_only(self):
         education_group_version_to_delete = self.data.get(self.next_academic_year).get(EDUCATION_GROUP_VERSION)
