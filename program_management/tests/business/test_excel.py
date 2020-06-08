@@ -33,29 +33,38 @@ from base.tests.factories.group_element_year import GroupElementYearChildLeafFac
 from base.tests.factories.prerequisite import PrerequisiteFactory
 from program_management.business.excel import EducationGroupYearLearningUnitsPrerequisitesToExcel, \
     EducationGroupYearLearningUnitsIsPrerequisiteOfToExcel
+from program_management.tests.factories.element import ElementGroupYearFactory, ElementLearningUnitYearFactory
+from program_management.tests.factories.education_group_version import EducationGroupVersionFactory
 
 
 class TestGeneratePrerequisitesWorkbook(TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.element_root = ElementGroupYearFactory()
+        cls.root = cls.element_root.group_year
         cls.education_group_year = EducationGroupYearFactory()
+        cls.education_group_version = EducationGroupVersionFactory(offer=cls.education_group_year,
+                                                                   root_group=cls.element_root.group_year)
+        ElementLearningUnitYearFactory()
+
         cls.child_leaves = GroupElementYearChildLeafFactory.create_batch(
             6,
-            parent=cls.education_group_year
+            parent_element=cls.element_root
         )
         luy_acronyms = ["LCORS124" + str(i) for i in range(0, len(cls.child_leaves))]
         for node, acronym in zip(cls.child_leaves, luy_acronyms):
-            node.child_leaf.acronym = acronym
-            node.child_leaf.save()
+            node.child_element.acronym = acronym
+            node.child_element.save()
 
-        cls.luy_children = [child.child_leaf for child in cls.child_leaves]
+        cls.luy_children = [child.child_element.learning_unit_year for child in cls.child_leaves]
 
         PrerequisiteFactory(
             learning_unit_year=cls.luy_children[0],
             education_group_year=cls.education_group_year,
             items__groups=(
                 (cls.luy_children[1],),
-            )
+            ),
+            education_group_version=cls.education_group_version
         )
         PrerequisiteFactory(
             learning_unit_year=cls.luy_children[2],
@@ -63,14 +72,18 @@ class TestGeneratePrerequisitesWorkbook(TestCase):
             items__groups=(
                 (cls.luy_children[3],),
                 (cls.luy_children[4], cls.luy_children[5])
-            )
+            ),
+            education_group_version=cls.education_group_version
         )
+
         cls.workbook_prerequisites = \
-            EducationGroupYearLearningUnitsPrerequisitesToExcel(cls.education_group_year)._to_workbook()
-        cls.workbook_is_prerequisite = \
-            EducationGroupYearLearningUnitsIsPrerequisiteOfToExcel(cls.education_group_year)._to_workbook()
+            EducationGroupYearLearningUnitsPrerequisitesToExcel(cls.root.academic_year.year,
+                                                                cls.root.partial_acronym)._to_workbook()
+        # cls.workbook_is_prerequisite = \
+        #     EducationGroupYearLearningUnitsIsPrerequisiteOfToExcel(cls.root.academic_year.year,
+        #                                                            cls.root.partial_acronym)._to_workbook()
         cls.sheet_prerequisites = cls.workbook_prerequisites.worksheets[0]
-        cls.sheet_is_prerequisite = cls.workbook_is_prerequisite.worksheets[0]
+        # cls.sheet_is_prerequisite = cls.workbook_is_prerequisite.worksheets[0]
 
     def test_header_lines(self):
         expected_headers = [
@@ -93,8 +106,11 @@ class TestGeneratePrerequisitesWorkbook(TestCase):
              str(self.child_leaves[1].block) if self.child_leaves[1].block else '',
              _("Yes") if self.child_leaves[1].is_mandatory else _("No")]
         ]
-
+        print('expected_content')
+        print(expected_content)
         content = [row_to_value(row) for row in self.sheet_prerequisites.iter_rows(range_string="A3:G4")]
+        print('content')
+        print(content)
         self.assertListEqual(expected_content, content)
 
     def test_when_learning_unit_year_has_multiple_prerequisites(self):

@@ -40,14 +40,15 @@ from program_management.forms.custom_xls import CustomXlsForm
 @login_required
 @permission_required('base.view_educationgroup', raise_exception=True)
 @set_download_cookie
-def get_learning_unit_prerequisites_excel(request, education_group_year_pk):
-    education_group_year = get_object_or_404(EducationGroupYear, pk=education_group_year_pk)
-    excel = EducationGroupYearLearningUnitsPrerequisitesToExcel(education_group_year).to_excel()
-    response = HttpResponse(excel, content_type=CONTENT_TYPE_XLS)
+def get_learning_unit_prerequisites_excel(request, year, code):
+    print('aa')
+    # liste des ue qui ont des prerequit
+    excel = EducationGroupYearLearningUnitsPrerequisitesToExcel(year, code).to_excel()
+    response = HttpResponse(excel['workbook'], content_type=CONTENT_TYPE_XLS)
     filename = "{workbook_name}.xlsx".format(
         workbook_name=str(_("prerequisites-%(year)s-%(acronym)s") % {
-            "year": education_group_year.academic_year.year,
-            "acronym": education_group_year.acronym
+            "year": year,
+            "acronym": excel['acronym']
         })
     )
     response['Content-Disposition'] = "%s%s" % ("attachment; filename=", filename)
@@ -57,14 +58,15 @@ def get_learning_unit_prerequisites_excel(request, education_group_year_pk):
 @login_required
 @permission_required('base.view_educationgroup', raise_exception=True)
 @set_download_cookie
-def get_learning_units_is_prerequisite_for_excel(request, education_group_year_pk):
-    education_group_year = get_object_or_404(EducationGroupYear, pk=education_group_year_pk)
-    excel = EducationGroupYearLearningUnitsIsPrerequisiteOfToExcel(education_group_year).to_excel()
-    response = HttpResponse(excel, content_type=CONTENT_TYPE_XLS)
+def get_learning_units_is_prerequisite_for_excel(request, year, code):
+    print('ab')
+    # liste de ues qui sont des prérequis
+    excel = EducationGroupYearLearningUnitsIsPrerequisiteOfToExcel(year, code).to_excel()
+    response = HttpResponse(excel["workbook"], content_type=CONTENT_TYPE_XLS)
     filename = "{workbook_name}.xlsx".format(
         workbook_name=str(_("is_prerequisite_of-%(year)s-%(acronym)s") % {
-            "year": education_group_year.academic_year.year,
-            "acronym": education_group_year.acronym
+            "year": year,
+            "acronym": excel['acronym']
         })
     )
     response['Content-Disposition'] = "%s%s" % ("attachment; filename=", filename)

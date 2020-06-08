@@ -6,7 +6,7 @@
 #    The core business involves the administration of students, teachers,
 #    courses, programs and so on.
 #
-#    Copyright (C) 2015-2019 Université catholique de Louvain (http://www.uclouvain.be)
+#    Copyright (C) 2015-2020 Université catholique de Louvain (http://www.uclouvain.be)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -39,12 +39,16 @@ from base.models.education_group_year import EducationGroupYear
 from base.models.enums.prerequisite_operator import OR, AND
 from base.models.group_element_year import GroupElementYear, fetch_row_sql
 from base.models.learning_unit_year import LearningUnitYear
-from base.models.prerequisite import Prerequisite
-from base.models.prerequisite_item import PrerequisiteItem
+# from base.models.prerequisite import Prerequisite
+# from base.models.prerequisite_item import PrerequisiteItem
 from osis_common.document.xls_build import _build_worksheet, CONTENT_KEY, HEADER_TITLES_KEY, WORKSHEET_TITLE_KEY, \
     STYLED_CELLS, STYLE_NO_GRAY
 from program_management.ddd.business_types import *
 from program_management.ddd.repositories import load_tree
+from typing import List
+from django.utils import translation
+from backoffice.settings.base import LANGUAGE_CODE_EN
+from program_management.ddd.domain.prerequisite import Prerequisite, PrerequisiteItem, PrerequisiteItemGroup
 
 STYLE_BORDER_BOTTOM = Style(
     border=Border(
@@ -80,92 +84,69 @@ HeaderLinePrerequisiteOf = namedtuple('HeaderLinePrerequisiteOf', ['egy_acronym'
 
 
 class EducationGroupYearLearningUnitsPrerequisitesToExcel:
-    def __init__(self, egy: EducationGroupYear):
-        self.egy = egy
-
-    def get_queryset(self):
-        group_element_years_of_education_group_year = [element["id"] for element in fetch_row_sql([self.egy.id])]
-        return Prerequisite.objects.filter(
-            education_group_year=self.egy
-        ).prefetch_related(
-            Prefetch(
-                "prerequisiteitem_set",
-                queryset=PrerequisiteItem.objects.order_by(
-                    'group_number',
-                    'position'
-                ).select_related(
-                    "learning_unit"
-                ).prefetch_related(
-                    Prefetch(
-                        "learning_unit__learningunityear_set",
-                        queryset=LearningUnitYear.objects.filter(
-                            academic_year=self.egy.academic_year
-                        ).prefetch_related(
-                            Prefetch(
-                                "child_leaf",
-                                queryset=GroupElementYear.objects.filter(
-                                    child_leaf__isnull=False,
-                                    id__in=group_element_years_of_education_group_year
-                                ),
-                                to_attr="links"
-                            )
-                        ),
-                        to_attr="luys"
-                    )
-                ),
-                to_attr="items"
-            )
-        ).select_related(
-            "learning_unit_year"
-        ).order_by(
-            "learning_unit_year__acronym"
-        )
+    def __init__(self, year: int, code: str):
+        # self.egy = egy
+        self.tree = load_tree.load_from_year_and_code(year, code)
 
     def _to_workbook(self):
-        return generate_prerequisites_workbook(self.egy, self.get_queryset())
+        return generate_prerequisites_workbook(self.tree)
 
     def to_excel(self):
-        return save_virtual_workbook(self._to_workbook())
+        return {
+            'workbook': save_virtual_workbook(self._to_workbook()),
+            'acronym': self.tree.root_node.title
+        }
 
 
-def generate_prerequisites_workbook(egy: EducationGroupYear, prerequisites_qs: QuerySet):
-    worksheet_title = _("prerequisites-%(year)s-%(acronym)s") % {"year": egy.academic_year.year, "acronym": egy.acronym}
+def generate_prerequisites_workbook(tree: 'ProgramTree') -> Workbook:
+    worksheet_title = _("prerequisites-%(year)s-%(acronym)s") % {"year": tree.root_node.year,
+                                                                 "acronym": tree.root_node.code}
     worksheet_title = clean_worksheet_title(worksheet_title)
     workbook = Workbook(encoding='utf-8')
 
-    excel_lines = _build_excel_lines(egy, prerequisites_qs)
+    excel_lines = _build_excel_lines(tree)
 
-    return _get_workbook(egy, excel_lines, workbook, worksheet_title, 7)
+    return _get_workbook(tree, excel_lines, workbook, worksheet_title, 7)
 
 
-def _build_excel_lines(egy: EducationGroupYear, prerequisite_qs: QuerySet):
+def _build_excel_lines(tree: 'ProgramTree') -> List:
     content = _first_line_content(
-        HeaderLine(egy_acronym=egy.acronym,
-                   egy_title=egy.title,
+        HeaderLine(egy_acronym=tree.root_node.code,
+                   egy_title=tree.root_node.title,
                    code_header=_('Code'),
                    title_header=_('Title'),
                    credits_header=_('Cred. rel./abs.'),
                    block_header=_('Block'),
                    mandatory_header=_('Mandatory'))
     )
-
-    for prerequisite in prerequisite_qs:
-        luy = prerequisite.learning_unit_year
+# qui on des pre
+    for luy in tree.get_nodes_that_have_prerequisites():
+        #  Bastien dit ceci : Tu peux créer une fonction dans ton fichier.py qui produit le fichier excel, à l'endroit
+        #  ou tu dois afficher le compelete title, tu fais uen fonction qui reprend les bons chamsp de ton objet DDD
+        #  en fonciton de la langue de l'utilisateur
         content.append(
-            LearningUnitYearLine(luy_acronym=luy.acronym, luy_title=luy.complete_title_i18n)
+            LearningUnitYearLine(luy_acronym=luy.code, luy_title=complete_title_i18n(luy))
         )
-        groups_generator = itertools.groupby(prerequisite.items, key=lambda item: item.group_number)
-        for key, group_gen in groups_generator:
 
-            group = list(group_gen)
-            for item in group:
-                prerequisite_line = _build_prerequisite_line(prerequisite, item, group)
+        for items in luy.prerequisite.prerequisite_item_groups:
+            print('ci')
+            for item in items.prerequisite_items:
+                prerequisite_line = _build_prerequisite_line(luy.prerequisite, item,
+                                                             items.prerequisite_items)
                 content.append(prerequisite_line)
+
+        # groups_generator = itertools.groupby(prerequisite.items, key=lambda item: item.group_number)
+        # for key, group_gen in groups_generator:
+        #
+        #     group = list(group_gen)
+        #     for item in group:
+        #         prerequisite_line = _build_prerequisite_line(prerequisite, item, group)
+        #         content.append(prerequisite_line)
 
     return content
 
 
-def _first_line_content(header_line):
+def _first_line_content(header_line: HeaderLinePrerequisiteOf):
     content = list()
     content.append(
         header_line
@@ -177,8 +158,8 @@ def _first_line_content(header_line):
 
 
 def _build_prerequisite_line(prerequisite: Prerequisite, prerequisite_item: PrerequisiteItem, group: list):
-    luy_item = prerequisite_item.learning_unit.luys[0]
-
+    luy_item = None
+    prerequisite_item.group_number
     text = (_("has as prerequisite") + " :") \
         if prerequisite_item.group_number == 1 and prerequisite_item.position == 1 else None
     operator = _get_operator(prerequisite, prerequisite_item)
@@ -301,27 +282,34 @@ def _add_hyperlink(excel_lines, workbook: Workbook, year):
 
 class EducationGroupYearLearningUnitsIsPrerequisiteOfToExcel:
 
-    def __init__(self, egy: EducationGroupYear):
-        self.root = egy
+    def __init__(self, year: int, code: str):
+        self.tree = load_tree.load_from_year_and_code(year, code)
 
     def _to_workbook(self):
-        return generate_ue_is_prerequisite_for_workbook(self.root)
+        return generate_ue_is_prerequisite_for_workbook(self.tree)
 
     def to_excel(self):
-        return save_virtual_workbook(self._to_workbook())
+        return {
+            'workbook': save_virtual_workbook(self._to_workbook()),
+            'acronym': '?'
+        }
 
 
-def generate_ue_is_prerequisite_for_workbook(root: EducationGroupYear):
-    worksheet_title = _("is_prerequisite_of-%(year)s-%(acronym)s") % {"year": root.academic_year.year,
-                                                                      "acronym": root.acronym}
+def generate_ue_is_prerequisite_for_workbook(tree: 'ProgramTree') -> Workbook:
+    worksheet_title = _("is_prerequisite_of-%(year)s-%(acronym)s") % {"year": tree.root_node.year,
+                                                                      "acronym": tree.root_node.code}
     worksheet_title = clean_worksheet_title(worksheet_title)
     workbook = Workbook()
 
-    excel_lines = _build_excel_lines_prerequisited(root)
-    return _get_workbook(root, excel_lines, workbook, worksheet_title, 6)
+    excel_lines = _build_excel_lines_prerequisited(tree)
+    return _get_workbook(tree, excel_lines, workbook, worksheet_title, 6)
 
 
-def _get_workbook(egy, excel_lines, workbook, worksheet_title, end_column):
+def _get_workbook(tree: 'ProgramTree',
+                  excel_lines: List,
+                  workbook: Workbook,
+                  worksheet_title: str,
+                  end_column: int) -> Workbook:
     header, *content = [tuple(line) for line in excel_lines]
     style = _get_style_to_apply(excel_lines)
     worksheet_data = {
@@ -332,20 +320,20 @@ def _get_workbook(egy, excel_lines, workbook, worksheet_title, end_column):
     }
     _build_worksheet(worksheet_data, workbook, 0)
     _merge_cells(excel_lines, workbook, end_column)
-    _add_hyperlink(excel_lines, workbook, str(egy.academic_year.year))
+    _add_hyperlink(excel_lines, workbook, str(tree.root_node.year))
     return workbook
 
 
-def _build_excel_lines_prerequisited(root: EducationGroupYear):
-    content = _first_line_content(HeaderLinePrerequisiteOf(egy_acronym=root.acronym,
-                                                           egy_title=root.title,
+def _build_excel_lines_prerequisited(tree: 'ProgramTree') -> List:
+    print('ici1')
+    content = _first_line_content(HeaderLinePrerequisiteOf(egy_acronym=tree.root_node.code,
+                                                           egy_title=tree.root_node.title,
                                                            title_header=_('Title'),
                                                            credits_header=_('Cred. rel./abs.'),
                                                            block_header=_('Block'),
                                                            mandatory_header=_('Mandatory'))
                                   )
-    tree = load_tree.load(root.id)
-    for child_node in tree.root_node.get_all_children_as_learning_unit_nodes():
+    for child_node in tree.get_nodes_that_are_prerequisites():
         if child_node.is_prerequisite:
             content.append(
                 LearningUnitYearLine(luy_acronym=child_node.code, luy_title=child_node.title)
@@ -363,7 +351,7 @@ def _build_excel_lines_prerequisited(root: EducationGroupYear):
     return content
 
 
-def _build_is_prerequisite_for_line(prerequisite_node: 'NodeLearningUnitYear', first, tree: 'ProgramTree'):
+def _build_is_prerequisite_for_line(prerequisite_node: 'NodeLearningUnitYear', first, tree: 'ProgramTree') -> PrerequisiteOfItemLine:
     text = (_("is a prerequisite of") + " :") if first else None
     first_link = tree.get_first_link_occurence_using_node(prerequisite_node)
     return PrerequisiteOfItemLine(
@@ -376,8 +364,35 @@ def _build_is_prerequisite_for_line(prerequisite_node: 'NodeLearningUnitYear', f
     )
 
 
-def clean_worksheet_title(title):
+def clean_worksheet_title(title: str) -> str:
     # Worksheet title is max 25 chars (31 chars with sheet number) + does not accept slash present in acronyms
     return title[:25].replace("/", "_")
 
 
+def get_complete_title(luy):
+    if translation.get_language() == LANGUAGE_CODE_EN:
+        complete_title = luy.specific_title_en
+    else:
+        complete_title = luy.specific_title_fr
+    # TODO : je vois pas comment faire pour récupérer ici le learning_container_year
+    # if luy.learning_container_year:
+    #     complete_title = ' - '.join(filter(None, [luy.learning_container_year.common_title, luy.specific_title]))
+    return complete_title
+
+
+def get_complete_title_english(luy):
+    complete_title_english = luy.specific_title_english
+    # TODO : je vois pas comment faire pour récupérer ici le learning_container_year
+    # if luy.learning_container_year:
+    #     complete_title_english = ' - '.join(filter(None, [
+    #         luy.learning_container_year.common_title_english,
+    #         luy.specific_title_english,
+    #     ]))
+    return complete_title_english
+
+
+def complete_title_i18n(luy):
+    complete_title = get_complete_title(luy)
+    if translation.get_language() == LANGUAGE_CODE_EN:
+        complete_title = luy.complete_title_english or complete_title
+    return complete_title
