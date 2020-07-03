@@ -147,7 +147,16 @@ def generate_partial_acronym():
         cnum=cnum,
         subdivision=subdivision
     )
+# Pourque Bernard puisse :
+# tester de version particulière des finalités au sein d’une 2M particulière, quand tu feras en Test, pourrais-tu créer
+# une finalité version particulière de GEST2MS/GE[CEMS] et de la mettre dans la liste des finalités de GESM2M[CEMS] ?
+
+# tester de version particulière des mineures au sein d’une Bachelier, peux-tu créer une version particulière de la
+# mineure MINMECA[BIO] et l’ajouter dans la liste des mineures de BIOL1BA (standard)
+# generate_new_version('GEST2M', 2020, 'CEMS')
+# generate_new_version('GEST2MS/GE', 2020, 'CEMS')
 
 
-generate_new_version('GEST2M', 2020, 'CEMS')
-generate_new_version('BIR1BA', 2020, 'CEMS')
+# generate_new_version('BIR1BA', 2020, 'CEMS')
+generate_new_version('MINMECA', 2020, 'CEMS')
+
