@@ -23,55 +23,22 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
-import attr
+
 from django.db import transaction
 
 from education_group.ddd import command
 from education_group.ddd.business_types import *
 from education_group.ddd.domain.training import TrainingBuilder
 from education_group.ddd.repository.training import TrainingRepository
-from education_group.ddd.service.write import create_group_service
 
 
 @transaction.atomic()
-def create_orphan_training(create_training_cmd: command.CreateTrainingCommand) -> 'TrainingIdentity':
-    # GIVEN
-    command = create_training_cmd
-
-    # WHEN
-    training = TrainingBuilder().get_training(create_training_cmd)
-
-    # THEN
-    # 1. Create orphan training
-    training_id = TrainingRepository.create(training)
-    # 2. TODO :: create training until + 6 (postpone)
-    # 3. Create orphan group
-    group_id = create_group_service.create_orphan_group(__convert_to_group_command(training_cmd=create_training_cmd))
-    # 4. TODO :: Create group until +6
-    # 5. TODO :: Create programTreeVersion
-    # 5.1. TODO :: Create ProgramTree
-    # 5.1.1. TODO :: Get orphan root group
-    # 5.1.2. TODO :: create mandatory children
-    # 5.2. TODO :: create Version
+def create_and_attach_training(create_training_cmd: command.CreateAndAttachTrainingCommand) -> 'TrainingIdentity':
+    pass
 
 
-    return training_id
-
-
-def create_mandatory_children(cmd: CreateMandatoryChildrenCommand) -> List['GroupIdentity']:
-    existing_tree = ProgramTreeRepository.get(ProgramTreeIdentity())
-    mandatory_types = existing_tree.root_node.get_mandatory_types()
-
-    created_group_identities = []
-    for type in mandatory_types:
-        created_group_identities.append(create_group_service.create_orphan_group())
-
-    return created_group_identities
-
-
-
-def __convert_to_group_command(training_cmd: command.CreateTrainingCommand) -> command.CreateOrphanGroupCommand:
-    return command.CreateOrphanGroupCommand(
+def __get_create_group_command(training_cmd: command.CreateTrainingCommand) -> command.CreateGroupCommand:
+    return command.CreateGroupCommand(
         code=training_cmd.code,
         year=training_cmd.year,
         type=training_cmd.type,
@@ -90,15 +57,3 @@ def __convert_to_group_command(training_cmd: command.CreateTrainingCommand) -> c
         start_year=training_cmd.year,
         end_year=training_cmd.end_year,
     )
-
-
-def postpone_training(postpone_cmd: command.PostponeTrainingCommand) -> 'TrainingIdentity':
-    # attr.evolve(instance, x=25)
-    pass
-
-
-class Point:
-    x = attr.ib(type=int)
-    y = attr.ib(type=str)
-
-p = Point()

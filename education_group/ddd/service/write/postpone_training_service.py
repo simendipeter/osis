@@ -23,16 +23,26 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
-from typing import TYPE_CHECKING
+from typing import List
 
-# FIXME :: Temporary solution ; waiting for update python to 3.8 for data structure
+from education_group.ddd import command
+from education_group.ddd.business_types import *
+from education_group.ddd.service.write import copy_training_service
 
-if TYPE_CHECKING:
-    from education_group.ddd.domain.training import Training, TrainingIdentity
-    from education_group.ddd.domain.group import Group, GroupIdentity
-    from education_group.ddd.command import CreateTrainingCommand
-    from education_group.ddd.domain._study_domain import StudyDomainIdentity
-    from education_group.ddd.domain._campus import Campus
-    from education_group.ddd.domain._co_organization import CoorganizationIdentity
-    from education_group.ddd.domain._diploma import DiplomaAimIdentity
-    from education_group.ddd.repository.training import TrainingRepository
+
+def postpone_training(postpone_cmd: command.PostponeTrainingCommand) -> List['TrainingIdentity']:
+    identities_created = []
+
+    from_year = postpone_cmd.postpone_from_year
+    while from_year < postpone_cmd.postpone_until_year:
+        # GIVEN
+        cmd_copy_from = command.CopyTrainingToNextYearCommand(acronym=postpone_cmd.acronym, postpone_from_year=from_year)
+
+        # WHEN
+        identity_next_year = copy_training_service.copy_training_to_next_year(cmd_copy_from)
+
+        # THEN
+        identities_created.append(identity_next_year)
+        from_year += 1
+
+    return identities_created

@@ -23,16 +23,11 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
-from typing import TYPE_CHECKING
 
-# FIXME :: Temporary solution ; waiting for update python to 3.8 for data structure
+from base.models.enums.education_group_types import EducationGroupTypesEnum
+from base.models.validation_rule import ValidationRule
 
-if TYPE_CHECKING:
-    from education_group.ddd.domain.training import Training, TrainingIdentity
-    from education_group.ddd.domain.group import Group, GroupIdentity
-    from education_group.ddd.command import CreateTrainingCommand
-    from education_group.ddd.domain._study_domain import StudyDomainIdentity
-    from education_group.ddd.domain._campus import Campus
-    from education_group.ddd.domain._co_organization import CoorganizationIdentity
-    from education_group.ddd.domain._diploma import DiplomaAimIdentity
-    from education_group.ddd.repository.training import TrainingRepository
+
+def get_validation_rule_for_field(node_type: EducationGroupTypesEnum, field_name: str) -> ValidationRule:
+    field_reference_value = 'GroupFrom.{type}.{field_name}'.format(type=node_type.name, field_name=field_name)
+    return ValidationRule.objects.get(field_reference=field_reference_value)

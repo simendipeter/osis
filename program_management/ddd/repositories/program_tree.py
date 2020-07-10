@@ -49,7 +49,14 @@ class ProgramTreeRepository(interface.AbstractRepository):
         raise NotImplementedError
 
     @classmethod
-    def create(cls, program_tree: 'ProgramTree') -> 'ProgramTreeIdentity':
+    def create(
+            cls,
+            program_tree: 'ProgramTree',
+            create_group_service: interface.ApplicationService
+            # services: List[interface.ApplicationService] = None
+    ) -> 'ProgramTreeIdentity':
+        for child_node in program_tree.root_node.children_as_nodes:
+            create_group_service(CreateGroupCommand())
         persist_tree.persist(program_tree)
         return program_tree.entity_id
 

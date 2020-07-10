@@ -23,16 +23,15 @@
 #    see http://www.gnu.org/licenses/.
 #
 ##############################################################################
-from typing import TYPE_CHECKING
+from base.models.education_group_year import EducationGroupYear
+from base.models.enums.education_group_types import EducationGroupTypesEnum
+from program_management.ddd.domain.service import validation_rule
+from program_management.ddd.business_types import *
 
-# FIXME :: Temporary solution ; waiting for update python to 3.8 for data structure
 
-if TYPE_CHECKING:
-    from education_group.ddd.domain.training import Training, TrainingIdentity
-    from education_group.ddd.domain.group import Group, GroupIdentity
-    from education_group.ddd.command import CreateTrainingCommand
-    from education_group.ddd.domain._study_domain import StudyDomainIdentity
-    from education_group.ddd.domain._campus import Campus
-    from education_group.ddd.domain._co_organization import CoorganizationIdentity
-    from education_group.ddd.domain._diploma import DiplomaAimIdentity
-    from education_group.ddd.repository.training import TrainingRepository
+def generate_base_on_parent(parent_node: 'Node', child_node_type: EducationGroupTypesEnum) -> str:
+    default_value = validation_rule.get_validation_rule_for_field(child_node_type, 'abbreviated_title').initial_value
+    return "{child_title}{parent_abbreviated_title}".format(
+        child_title=default_value.replace(" ", "").upper(),
+        parent_abbreviated_title=parent_node.title
+    )[:EducationGroupYear._meta.get_field("acronym").max_length]
