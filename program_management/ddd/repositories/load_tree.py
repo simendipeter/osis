@@ -42,6 +42,7 @@ from program_management.ddd.repositories import load_node, load_prerequisite, \
 # Typing
 from program_management.ddd.repositories.load_prerequisite import TreeRootId, NodeId
 from program_management.models.education_group_version import EducationGroupVersion
+from program_management.ddd.repositories.program_tree_version import ProgramTreeVersionRepository
 
 GroupElementYearColumnName = str
 LinkKey = str  # <parent_id>_<child_id>  Example : "123_124"
@@ -98,25 +99,7 @@ def load_trees_from_children(
         child_element_ids: list,
         link_type: LinkTypes = None
 ) -> List['ProgramTree']:
-    if child_element_ids:
-        assert isinstance(child_element_ids, list)
-    if not child_element_ids:
-        return []
-
-    qs = group_element_year.GroupElementYear.objects.get_reverse_adjacency_list(
-        child_element_ids=child_element_ids,
-        link_type=link_type,
-    )
-    if not qs:
-        return []
-    all_parents = set(obj["parent_id"] for obj in qs)
-    parent_by_child_branch = {
-        obj["child_id"]: obj["parent_id"] for obj in qs
-    }
-    root_ids = set(
-        parent_id for parent_id in all_parents
-        if not parent_by_child_branch.get(parent_id)
-    )
+    root_ids = _get_root_ids(child_element_ids, link_type)
     return load_trees(list(root_ids))
 
 
@@ -279,3 +262,33 @@ def find_all_versions_academic_year(acronym: str,
     for elem in qs:
         results.append(EducationGroupVersionAcademicYear(elem.educationgroupversion))
     return results
+
+
+def load_tree_versions_from_children(
+        child_element_ids: list,
+        link_type: LinkTypes = None
+) -> List['ProgramTreeVersion']:
+    root_ids = _get_root_ids(child_element_ids, link_type)
+    return ProgramTreeVersionRepository.search(element_ids=list(root_ids))
+
+
+def _get_root_ids(child_element_ids: list, link_type: LinkTypes = None) -> List[int]:
+    if child_element_ids:
+        assert isinstance(child_element_ids, list)
+    if not child_element_ids:
+        return []
+
+    qs = group_element_year.GroupElementYear.objects.get_reverse_adjacency_list(
+        child_element_ids=child_element_ids,
+        link_type=link_type,
+    )
+    if not qs:
+        return []
+    all_parents = set(obj["parent_id"] for obj in qs)
+    parent_by_child_branch = {
+        obj["child_id"]: obj["parent_id"] for obj in qs
+    }
+    return set(
+        parent_id for parent_id in all_parents
+        if not parent_by_child_branch.get(parent_id)
+    )

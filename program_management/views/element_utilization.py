@@ -6,7 +6,7 @@
 #    The core business involves the administration of students, teachers,
 #    courses, programs and so on.
 #
-#    Copyright (C) 2015-2019 Université catholique de Louvain (http://www.uclouvain.be)
+#    Copyright (C) 2015-2020 Université catholique de Louvain (http://www.uclouvain.be)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -36,13 +36,20 @@ class LearningUnitUtilization(PermissionRequiredMixin, LearningUnitGeneric):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        trees = tree_service.search_trees_using_node(self.node)
+        program_trees_versions = tree_service.search_tree_versions_using_node(self.node)
 
         context['utilization_rows'] = []
-        for tree in trees:
-            context['utilization_rows'] += [
-                {'link': link, 'root_nodes': [tree.root_node]}
-                for link in tree.get_links_using_node(self.node)
-            ]
+        for program_tree_version in program_trees_versions:
+            tree = program_tree_version.get_tree()
+            for link in tree.get_links_using_node(self.node):
+                context['utilization_rows'].append(
+                    {'link': link,
+                     'link_parent_version_label': 'dddd',
+                     'root_nodes': [tree.root_node],
+                     'root_version_label': "[{}]".format(
+                         program_tree_version.version_label if program_tree_version.version_label else ''
+                     ) if program_tree_version.version_label else ''}
+                )
+
         context['utilization_rows'] = sorted(context['utilization_rows'], key=lambda row: row['link'].parent.code)
         return context
