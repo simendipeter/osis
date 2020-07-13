@@ -108,7 +108,7 @@ msgid "Are you sure you want to detach %(acronym)s ?"
 msgstr "Are you sure you want to remove %(acronym)s ?"
 
 msgid ""
-"At least an education group year, a group year, a learning unit year or a "
+"At least a group year, a learning unit year or a "
 "learning class year has to be set"
 msgstr ""
 
@@ -347,7 +347,7 @@ msgid "Online resources"
 msgstr ""
 
 msgid ""
-"Only one of the following has to be set : an education group year, a group "
+"Only one of the following has to be set : a group "
 "year, a learning unit year or a learning class"
 msgstr ""
 
