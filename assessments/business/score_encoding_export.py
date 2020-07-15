@@ -191,7 +191,7 @@ def __coloring_non_editable(ws, row_number, score, justification):
     pattern_fill_grey = PatternFill(patternType='solid', fgColor=Color('C1C1C1'))
     column_number = 1
     while column_number < 18:
-        if column_number < 9 or column_number > 10:
+        if column_number not in [9, 10]:
             ws.cell(row=row_number, column=column_number).fill = pattern_fill_grey
         else:
             if not(score is None and justification is None):
