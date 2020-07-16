@@ -70,25 +70,33 @@ MAXIMUM_CREDITS = 500
 #   title, category, name, id (for education_group_type) and level }
 SQL_RECURSIVE_QUERY_EDUCATION_GROUP_TO_CLOSEST_TRAININGS = """\
 WITH RECURSIVE group_element_year_parent AS (
-    SELECT gs.id, gs.id AS gs_origin, child_branch_id, child_leaf_id, parent_id, educ.acronym, educ.title,
-    educ_type.category, educ_type.name, educ_type.id, 0 AS level
-    
+    SELECT gs.id, gs.id AS gs_origin, gy.acronym, gy.title_fr, educ_type.category, educ_type.name,
+    0 AS level, parent_element_id, child_element_id, gy.id as id_group_year, version.is_transition, version.version_name
+
     FROM base_groupelementyear AS gs
-    INNER JOIN base_educationgroupyear AS educ ON gs.parent_id = educ.id
-    INNER JOIN base_educationgrouptype AS educ_type on educ.education_group_type_id = educ_type.id
-    WHERE gs.child_leaf_id = "base_learningunityear"."id" 
-    
+    INNER JOIN program_management_element AS element_parent ON gs.parent_element_id = element_parent.id
+    INNER JOIN program_management_element AS element_child ON gs.child_element_id = element_child.id
+    INNER JOIN education_group_groupyear AS gy ON element_parent.group_year_id = gy.id
+    INNER JOIN base_educationgrouptype AS educ_type on gy.education_group_type_id = educ_type.id
+    LEFT JOIN program_management_educationgroupversion AS version on gy.id = version.root_group_id        
+    LEFT JOIN base_learningunityear bl on element_child.learning_unit_year_id = bl.id
+    WHERE element_child.learning_unit_year_id = "base_learningunityear"."id" 
+
     UNION ALL
-    
-    SELECT parent.id, gs_origin, parent.child_branch_id, parent.child_leaf_id, parent.parent_id, 
-    educ.acronym, educ.title, educ_type.category, educ_type.name, educ_type.id, child.level + 1
-    
+
+    SELECT parent.id, gs_origin,  
+    gy.acronym, gy.title_fr, educ_type.category, educ_type.name,child.level + 1,
+    parent.parent_element_id, parent.child_element_id, gy.id as id_group_year, version.is_transition, version.version_name
+
     FROM base_groupelementyear AS parent
-    INNER JOIN base_educationgroupyear AS educ ON parent.parent_id = educ.id
-    INNER JOIN base_educationgrouptype AS educ_type ON educ.education_group_type_id = educ_type.id
-    INNER JOIN base_educationgroupyear AS educ_child ON parent.child_branch_id = educ_child.id
-    INNER JOIN base_educationgrouptype AS educ_type_child ON educ_child.education_group_type_id = educ_type_child.id
-    INNER JOIN group_element_year_parent AS child on parent.child_branch_id = child.parent_id
+    INNER JOIN program_management_element AS element_parent ON parent.parent_element_id = element_parent.id
+    INNER JOIN program_management_element AS element_child ON parent.child_element_id = element_child.id    
+    INNER JOIN education_group_groupyear AS gy ON element_parent.group_year_id = gy.id
+    INNER JOIN base_educationgrouptype AS educ_type on gy.education_group_type_id = educ_type.id
+    INNER JOIN education_group_groupyear AS gy_child ON element_child.group_year_id = gy_child.id
+    INNER JOIN base_educationgrouptype AS educ_type_child on gy_child.education_group_type_id = educ_type_child.id    
+    INNER JOIN group_element_year_parent AS child on parent.child_element_id = child.parent_element_id
+    left JOIN program_management_educationgroupversion AS version on gy.id = version.root_group_id    
     WHERE not(educ_type_child.name != 'OPTION' AND educ_type_child.category IN ('MINI_TRAINING', 'TRAINING'))
 )
 
@@ -191,7 +199,7 @@ class BaseLearningUnitYearManager(SerializableModelManager):
 class LearningUnitYearWithContainerManager(models.Manager):
     def get_queryset(self):
         # FIXME For the moment, the learning_unit_year without container must be hide !
-        return super().get_queryset().select_related('learning_container_year')\
+        return super().get_queryset().select_related('learning_container_year') \
             .filter(learning_container_year__isnull=False)
 
 
@@ -304,7 +312,7 @@ class LearningUnitYear(SerializableModel):
             complete_title = ' - '.join(filter(None, [self.learning_container_year.common_title, self.specific_title]))
         return complete_title
 
-    @property    # TODO :: move this into template tags or 'presentation' layer (not responsibility of model)
+    @property  # TODO :: move this into template tags or 'presentation' layer (not responsibility of model)
     def complete_title_english(self):
         complete_title_english = self.specific_title_english
         if self.learning_container_year:

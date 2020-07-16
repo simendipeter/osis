@@ -51,6 +51,7 @@ from program_management.ddd.domain.node import NodeIdentity, NodeNotFoundExcepti
 from program_management.ddd.repositories import load_tree
 from program_management.forms.custom_xls import CustomXlsForm
 from program_management.models.element import Element
+from program_management.serializers.program_tree_view import program_tree_view_serializer
 from program_management.serializers.program_tree_version_view import program_tree_version_view_serializer
 from program_management.ddd.repositories.program_tree_version import ProgramTreeVersionRepository
 from program_management.ddd.domain.service.identity_search import ProgramTreeVersionIdentitySearch
@@ -77,6 +78,7 @@ class GroupRead(PermissionRequiredMixin, ElementSelectedClipBoardMixin, Template
 
     @functools.lru_cache()
     def get_tree(self):
+        print('get_tree {}'.format(self.get_path()))
         root_element_id = self.get_path().split("|")[0]
         return load_tree.load(int(root_element_id))
 
@@ -86,11 +88,16 @@ class GroupRead(PermissionRequiredMixin, ElementSelectedClipBoardMixin, Template
 
     @cached_property
     def program_tree_version_identity(self) -> 'ProgramTreeVersionIdentity':
+        print('program_tree_version_identity {} {}'.format(self.get_tree().root_node.code, self.get_tree().root_node.year))
         return ProgramTreeVersionIdentitySearch().get_from_node_identity(
             NodeIdentity(code=self.get_tree().root_node.code, year=self.get_tree().root_node.year))
 
     @cached_property
     def current_version(self) -> 'ProgramTreeVersion':
+        print('current_version')
+        print(self.program_tree_version_identity.offer_acronym)
+        print(self.program_tree_version_identity.year)
+        print(self.program_tree_version_identity.is_transition)
         return ProgramTreeVersionRepository.get(self.program_tree_version_identity)
 
     @functools.lru_cache()

@@ -6,7 +6,7 @@
 #    The core business involves the administration of students, teachers,
 #    courses, programs and so on.
 #
-#    Copyright (C) 2015-2019 Université catholique de Louvain (http://www.uclouvain.be)
+#    Copyright (C) 2015-2020 Université catholique de Louvain (http://www.uclouvain.be)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ from base.business.xls import get_name_or_username, _get_all_columns_reference
 from base.models.enums.learning_component_year_type import LECTURING, PRACTICAL_EXERCISES
 from base.models.enums.proposal_type import ProposalType
 from base.models.learning_component_year import LearningComponentYear
-from base.models.learning_unit_year import SQL_RECURSIVE_QUERY_EDUCATION_GROUP_TO_CLOSEST_TRAININGS
+from base.models.learning_unit_year import SQL_RECURSIVE_QUERY_EDUCATION_GROUP_TO_CLOSEST_TRAININGS, LearningUnitYear
 from osis_common.document import xls_build
 
 XLS_DESCRIPTION = _('Learning units list')
@@ -95,7 +95,8 @@ def prepare_xls_content(learning_unit_years, with_grp=False, with_attributions=F
     if with_grp:
         qs = qs.annotate(
             closest_trainings=RawSQL(SQL_RECURSIVE_QUERY_EDUCATION_GROUP_TO_CLOSEST_TRAININGS, ())
-        ).prefetch_related('child_leaf__parent')
+        ).prefetch_related('element')
+        # qs = qs.prefetch_related('element')
 
     result = []
 
@@ -248,31 +249,42 @@ def _get_col_letter(titles, title_search):
     return None
 
 
-def _add_training_data(learning_unit_yr):
-    return "\n".join([
+def _add_training_data(learning_unit_yr: LearningUnitYear) -> str:
+    return ("\n".join([
         _concatenate_training_data(learning_unit_yr, group_element_year)
-        for group_element_year in learning_unit_yr.child_leaf.all()
-    ])
+        for group_element_year in learning_unit_yr.element.children_elements.all()
+    ])).strip()
 
 
 def _concatenate_training_data(learning_unit_year, group_element_year) -> str:
+    print('**********')
+    print(type(group_element_year))
     concatenated_string = ''
-    if not learning_unit_year.closest_trainings:
+    if not learning_unit_year.closest_trainings or group_element_year.parent_element.group_year is None:
         return concatenated_string
 
-    partial_acronym = group_element_year.parent.partial_acronym or ''
+    partial_acronym = group_element_year.parent_element.group_year.partial_acronym or ''
     leaf_credits = "{0:.2f}".format(
-        group_element_year.child_leaf.credits) if group_element_year.child_leaf.credits else '-'
+        group_element_year.child_element.learning_unit_year.credits) if group_element_year.child_element.learning_unit_year.credits else '-'
     nb_parents = '-' if len(learning_unit_year.closest_trainings) > 0 else ''
-
+    print('**iii')
+    print(len(learning_unit_year.closest_trainings))
     for training in learning_unit_year.closest_trainings:
         if training['gs_origin'] == group_element_year.pk:
+            print(group_element_year.parent_element.group_year.id)
+            # print('ok {} {} {} {}'.format(training['id'],training['gs_origin'], training['version_name'], training['is_transition']))
+            print('ok {} {} {}'.format(training['is_transition'], training['gs_origin'], training['id_group_year']))
+            if training['version_name'] or training['is_transition']:
+                acronym = "{}{}".format(training['acronym'],
+                                        version_label(training['is_transition'], training['version_name']))
+            else:
+                acronym = training['acronym']
             training_string = "{} ({}) {} {} - {}\n".format(
                 partial_acronym,
                 leaf_credits,
                 nb_parents,
-                training['acronym'],
-                training['title'],
+                acronym,
+                training['title_fr'],
             )
             concatenated_string += training_string
 
@@ -473,3 +485,9 @@ def volume_information(learning_unit_yr):
             get_significant_volume(learning_unit_yr.pp_vol_q1 or 0),
             get_significant_volume(learning_unit_yr.pp_vol_q2 or 0),
             learning_unit_yr.pp_classes or 0]
+
+def version_label(is_transition, version_name):
+    if version_name == '':
+        return '[Transition]' if is_transition else ''
+    else:
+        return '[{}-Transition]'.format(version_name) if is_transition else '[{}]'.format(version_name)
