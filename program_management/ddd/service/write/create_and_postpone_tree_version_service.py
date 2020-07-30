@@ -58,4 +58,6 @@ def create_and_postpone(
         )
     )
 
+    raise Exception('rollback')
+
     return [identity] + created_identities

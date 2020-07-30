@@ -237,6 +237,12 @@ class SearchAllVersionsFromRootNodesCommand(interface.CommandRequest):
         self.year = year
 
 
+@attr.s(frozen=True, slots=True)
+class SearchAllVersionsFromAttributesCommand(interface.CommandRequest):
+    offer_acronym = attr.ib(type=str)
+    version_name = attr.ib(type=str)
+
+
 class GetProgramTree(interface.CommandRequest):
     def __init__(self, code: str, year: int):
         self.code = code
@@ -314,3 +320,4 @@ class CreateAndAttachTrainingCommand(education_group_command.CreateTrainingComma
 class DuplicateProgramTree(interface.CommandRequest):
     from_root_code = attr.ib(type=str)
     from_root_year = attr.ib(type=int)
+    end_year_existing = attr.ib(type=int)

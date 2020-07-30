@@ -32,7 +32,7 @@ from program_management.ddd.business_types import *
 from program_management.ddd.domain.node import NodeIdentity
 from program_management.serializers.node_view import serialize_children
 import program_management.ddd.command
-from program_management.ddd.service.read.search_all_versions_from_root_nodes import search_all_versions_from_root_nodes
+from program_management.ddd.service.read.search_tree_versions_service import search_all_versions_from_root_nodes
 
 
 def program_tree_view_serializer(tree: 'ProgramTree') -> dict:

@@ -41,7 +41,11 @@ from education_group.ddd.domain.service.identity_search import TrainingIdentityS
 from education_group.ddd.domain.training import TrainingIdentity
 from osis_common.decorators.ajax import ajax_required
 from osis_role.contrib.views import AjaxPermissionRequiredMixin
+from program_management.ddd.command import SearchAllVersionsFromAttributesCommand
 from program_management.ddd.domain.node import NodeIdentity
+from program_management.ddd.domain.program_tree_version import ProgramTreeVersionIdentity
+from program_management.ddd.repositories.program_tree_version import ProgramTreeVersionRepository
+from program_management.ddd.service.read import search_tree_versions_service
 from program_management.models.education_group_version import EducationGroupVersion
 
 
@@ -51,7 +55,7 @@ class CreateProgramTreeVersion(AjaxPermissionRequiredMixin, SuccessMessageMixin,
     permission_required = 'base.create_specific_version'
 
     @cached_property
-    def node_identity(self) -> 'NodeIdentity':
+    def node_identity(self) -> 'NodeIdentity': # TODO to remove?
         return NodeIdentity(code=self.kwargs['code'], year=self.kwargs['year'])
 
     @cached_property
@@ -66,8 +70,8 @@ class CreateProgramTreeVersion(AjaxPermissionRequiredMixin, SuccessMessageMixin,
     def education_group_year(self):
         return get_object_or_404(
             EducationGroupYear,
-            academic_year__year=self.kwargs['year'],
-            acronym=self.kwargs['code'],
+            academic_year__year=self.training_identity.year,
+            acronym=self.training_identity.acronym,
         )
 
     def _call_rule(self, rule):
@@ -106,29 +110,35 @@ class CreateProgramTreeVersion(AjaxPermissionRequiredMixin, SuccessMessageMixin,
 
 @login_required
 @ajax_required
-def check_version_name(request, education_group_year_id):
-    education_group_year = get_object_or_404(EducationGroupYear, pk=education_group_year_id)
-    version_name = education_group_year.acronym + request.GET['version_name']
-    existed_version_name = False
-    existing_version_name = check_existing_version(version_name, education_group_year_id)
-    last_using = None
-    old_specific_versions = find_last_existed_version(education_group_year, version_name)
-    if old_specific_versions:
-        last_using = str(old_specific_versions.offer.academic_year)
-        existed_version_name = True
-    valid = bool(re.match("^[A-Z]{0,15}$", request.GET['version_name'].upper()))
-    return JsonResponse({
-        "existed_version_name": existed_version_name,
-        "existing_version_name": existing_version_name,
-        "last_using": last_using,
-        "valid": valid,
-        "version_name": request.GET['version_name']}, safe=False)
+def check_version_name(request, year: int, offer_acronym: str):
+    version_name = request.GET['version_name']
+    tree_versions = search_tree_versions_service.search_all_versions_from_attributes(
+        SearchAllVersionsFromAttributesCommand(
+            offer_acronym=offer_acronym.upper(),
+            version_name=version_name.upper(),
+        )
+    )
+    last_using = next((version for version in tree_versions or [] if version.entity_id.year < year), None)
+    existed_version_name = bool(last_using)
+    existing_version_name = any(version for version in tree_versions or [] if version.entity_id.year == year)
+    valid = bool(re.match("^[A-Z]{0,15}$", version_name.upper()))
+    return JsonResponse(
+        {
+            "existed_version_name": existed_version_name,
+            "existing_version_name": existing_version_name,
+            "last_using": last_using,
+            "valid": valid,
+            "version_name": version_name
+        },
+        safe=False
+    )
 
 
-def check_existing_version(version_name: str, education_group_year_id: int) -> bool:
+def check_existing_version(version_name: str, acronym: str, year: int) -> bool:
     return EducationGroupVersion.objects.filter(
         version_name=version_name,
-        offer__id=education_group_year_id,
+        offer__acronym=acronym,
+        offer__academic_year__year=year,
     ).exists()
 
 

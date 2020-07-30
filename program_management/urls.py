@@ -116,10 +116,11 @@ urlpatterns = [
             name="create_education_group_version"
         ),
     ])),
-
-    path(
-        'check_version_name/<int:education_group_year_id>/',
-        create_program_tree_version.check_version_name,
-        name="check_version_name"
-    ),
+    path('<int:year>/<str:offer_acronym>/', include([
+        path(
+            'check_version_name/',
+            create_program_tree_version.check_version_name,
+            name="check_version_name"
+        ),
+    ])),
 ]

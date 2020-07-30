@@ -25,7 +25,7 @@
 ##############################################################################
 from typing import Optional, List
 
-from django.db.models import F
+from django.db.models import F, QuerySet
 
 from base.models.education_group_year import EducationGroupYear
 from education_group.models.group_year import GroupYear
@@ -77,25 +77,19 @@ class ProgramTreeVersionRepository(interface.AbstractRepository):
 
     @classmethod
     def get(cls, entity_id: ProgramTreeVersionIdentity) -> 'ProgramTreeVersion':
-        qs = EducationGroupVersion.objects.filter(
-            version_name=entity_id.version_name,
-            offer__acronym=entity_id.offer_acronym,
-            offer__academic_year__year=entity_id.year,
-            is_transition=entity_id.is_transition,
-        ).annotate(
-            code=F('root_group__partial_acronym'),
-            offer_acronym=F('offer__acronym'),
-            offer_year=F('offer__academic_year__year'),
-            version_title_fr=F('title_fr'),
-            version_title_en=F('title_en'),
-        ).values(
-            'code',
-            'offer_acronym',
-            'offer_year',
-            'version_name',
-            'version_title_fr',
-            'version_title_en',
-            'is_transition',
+        qs = _append_values_to_qs(
+            EducationGroupVersion.objects.filter(
+                version_name=entity_id.version_name,
+                offer__acronym=entity_id.offer_acronym,
+                offer__academic_year__year=entity_id.year,
+                is_transition=entity_id.is_transition,
+            ).annotate(
+                code=F('root_group__partial_acronym'),
+                offer_acronym=F('offer__acronym'),
+                offer_year=F('offer__academic_year__year'),
+                version_title_fr=F('title_fr'),
+                version_title_en=F('title_en'),
+            )
         )
         if qs:
             return _instanciate_tree_version(qs[0])
@@ -126,9 +120,22 @@ class ProgramTreeVersionRepository(interface.AbstractRepository):
     def search(
             cls,
             entity_ids: Optional[List['ProgramTreeVersionIdentity']] = None,
-            **kwargs
+            offer_acronym: str = None,
+            version_name: str = None
     ) -> List[ProgramTreeVersion]:
-        raise NotImplementedError
+        qs = EducationGroupVersion.objects.all().annotate(
+            code=F('root_group__partial_acronym'),
+            offer_acronym=F('offer__acronym'),
+            offer_year=F('offer__academic_year__year'),
+            version_title_fr=F('title_fr'),
+            version_title_en=F('title_en'),
+        )
+        if offer_acronym is not None:
+            qs = qs.filter(offer_acronym=offer_acronym)
+        if version_name is not None:
+            qs = qs.filter(version_name=version_name)
+        if qs:
+            return [_instanciate_tree_version(values) for values in _append_values_to_qs(qs)]
 
     @classmethod
     def delete(cls, entity_id: 'ProgramTreeVersionIdentity', **_) -> None:
@@ -189,19 +196,29 @@ def _build_where_clause(node_identity: 'Node') -> Q:
 
 
 def _search_versions_from_offer_ids(offer_ids: List[int]) -> List['ProgramTreeVersion']:
-    qs = GroupYear.objects.filter(
-        educationgroupversion__offer_id__in=offer_ids,
-    ).order_by(
-        'educationgroupversion__version_name'
-    ).annotate(
-        code=F('partial_acronym'),
-        offer_acronym=F('educationgroupversion__offer__acronym'),
-        offer_year=F('educationgroupversion__offer__academic_year__year'),
-        version_name=F('educationgroupversion__version_name'),
-        version_title_fr=F('educationgroupversion__title_fr'),
-        version_title_en=F('educationgroupversion__title_en'),
-        is_transition=F('educationgroupversion__is_transition'),
-    ).values(
+    qs = _append_values_to_qs(
+        GroupYear.objects.filter(
+            educationgroupversion__offer_id__in=offer_ids,
+        ).order_by(
+            'educationgroupversion__version_name'
+        ).annotate(
+            code=F('partial_acronym'),
+            offer_acronym=F('educationgroupversion__offer__acronym'),
+            offer_year=F('educationgroupversion__offer__academic_year__year'),
+            version_name=F('educationgroupversion__version_name'),
+            version_title_fr=F('educationgroupversion__title_fr'),
+            version_title_en=F('educationgroupversion__title_en'),
+            is_transition=F('educationgroupversion__is_transition'),
+        )
+    )
+    results = []
+    for record_dict in qs:
+        results.append(_instanciate_tree_version(record_dict))
+    return results
+
+
+def _append_values_to_qs(qs: QuerySet) -> QuerySet:
+    return qs.values(
         'code',
         'offer_acronym',
         'offer_year',
@@ -210,7 +227,3 @@ def _search_versions_from_offer_ids(offer_ids: List[int]) -> List['ProgramTreeVe
         'version_title_en',
         'is_transition',
     )
-    results = []
-    for record_dict in qs:
-        results.append(_instanciate_tree_version(record_dict))
-    return results

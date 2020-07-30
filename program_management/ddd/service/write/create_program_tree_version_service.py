@@ -51,6 +51,7 @@ def create_program_tree_version(
         DuplicateProgramTree(
             from_root_code=program_tree_version_standard.program_tree_identity.code,
             from_root_year=program_tree_version_standard.program_tree_identity.year,
+            end_year_existing=command.end_year,
         )
     )
     new_program_tree_version = ProgramTreeVersionBuilder().create_from_standard_version(

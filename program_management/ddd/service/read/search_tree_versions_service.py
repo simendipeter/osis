@@ -35,3 +35,12 @@ def search_all_versions_from_root_nodes(
     node_identities = [NodeIdentity(code=command.code, year=command.year) for command in commands]
 
     return ProgramTreeVersionRepository.search_all_versions_from_root_nodes(node_identities)
+
+
+def search_all_versions_from_attributes(
+        cmd: command.SearchAllVersionsFromAttributesCommand
+) -> List['ProgramTreeVersion']:
+    return ProgramTreeVersionRepository().search(
+        offer_acronym=cmd.offer_acronym,
+        version_name=cmd.version_name,
+    )
