@@ -90,20 +90,15 @@ class TestElementSave(TestCase):
 
         with self.assertRaisesMessage(
                 AttributeError,
-                _('Only one of the following has to be set : an education group year, a group year, '
+                _('Only one of the following has to be set : a group year, '
                   'a learning unit year or a learning class')):
             element = ElementFactory(learning_class_year=self.lcy, group_year=self.gy)
             element.save()
 
             self.assertFalse(
-                Element.objects.filter(education_group_year=None,
-                                       group_year=self.gy,
+                Element.objects.filter(group_year=self.gy,
                                        learning_unit_year=None,
                                        learning_class_year=self.lcy).exists())
-
-    def test_str_egy(self):
-        element = ElementFactory(education_group_year=self.egy)
-        self.assertEqual(str(element), str(self.egy))
 
     def test_str_luy(self):
         element = ElementFactory(learning_unit_year=self.luy)

@@ -94,7 +94,7 @@ class TrainingTreeView(EducationGroupTreeView):
         group_year__educationgroupversion__is_transition=False
     ).annotate(
         education_group_year_obj=F('group_year__educationgroupversion__offer')
-    ).select_related('education_group_year')
+    ).select_related('group_year')
 
 
 class MiniTrainingTreeView(EducationGroupTreeView):
@@ -111,7 +111,7 @@ class MiniTrainingTreeView(EducationGroupTreeView):
         group_year__educationgroupversion__is_transition=False
     ).annotate(
         education_group_year_obj=F('group_year__educationgroupversion__offer')
-    ).select_related('education_group_year')
+    ).select_related('group_year')
 
     def get_object(self):
         version = self.get_mini_training_version()
@@ -119,7 +119,7 @@ class MiniTrainingTreeView(EducationGroupTreeView):
         element = get_object_or_404(
             Element.objects.annotate(
                 education_group_year_obj=F('group_year__educationgroupversion__offer')
-            ).select_related('education_group_year'),
+            ).select_related('group_year'),
             group_year__educationgroupversion=version
         )
 
@@ -161,7 +161,7 @@ class GroupTreeView(EducationGroupTreeView):
         group_year__education_group_type__category=Categories.GROUP.name
     ).annotate(
         education_group_year_obj=F('group_year__educationgroupversion__offer')
-    ).select_related('education_group_year')
+    ).select_related('group_year')
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
