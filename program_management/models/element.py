@@ -137,7 +137,6 @@ class Element(models.Model):
 
     def __str__(self):
         field = {
-            NodeType.EDUCATION_GROUP: self.education_group_year,
             NodeType.GROUP: self.group_year,
             NodeType.LEARNING_UNIT: self.learning_unit_year,
             NodeType.LEARNING_CLASS: self.learning_class_year,
@@ -146,20 +145,19 @@ class Element(models.Model):
 
     def save(self, *args, **kwargs):
 
-        if not any([self.education_group_year, self.group_year, self.learning_class_year, self.learning_unit_year]):
+        if not any([self.group_year, self.learning_class_year, self.learning_unit_year]):
             raise AttributeError(
                 _('At least an education group year, a group year, a learning unit year or a learning class year has '
                   'to be set')
             )
-        resulted_counter = Counter([self.education_group_year,
-                                    self.group_year,
+        resulted_counter = Counter([self.group_year,
                                     self.learning_class_year,
                                     self.learning_unit_year])
 
-        if resulted_counter[None] < 3:
+        if resulted_counter[None] < 2:
             raise AttributeError(
                 _(
-                    'Only one of the following has to be set : an education group year, a group year, '
+                    'Only one of the following has to be set : a group year, '
                     'a learning unit year or a learning class')
             )
 
@@ -167,9 +165,7 @@ class Element(models.Model):
 
     @property
     def node_type(self):
-        if self.education_group_year:
-            return NodeType.EDUCATION_GROUP
-        elif self.group_year:
+        if self.group_year:
             return NodeType.GROUP
         elif self.learning_unit_year:
             return NodeType.LEARNING_UNIT
