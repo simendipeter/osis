@@ -62,8 +62,9 @@ class TrainingReadGeneralInformation(TrainingRead):
         }
 
     def get_update_label_url(self):
-        offer_id = self.education_group_version.offer_id
-        return reverse('education_group_pedagogy_edit', args=[offer_id]) + "?path={}".format(self.get_path())
+        node = self.get_object()
+        return reverse('education_group_pedagogy_edit',
+                       args=[node.year, node.code]) + "?path={}".format(self.get_path())
 
     def get_sections(self):
         return serializers.general_information.get_sections(self.get_object(), self.request.LANGUAGE_CODE)
