@@ -70,10 +70,6 @@ urlpatterns = [
             url(r'^(?P<education_group_year_pk>[0-9]+)/', create.validate_field, name='validate_education_group_field'),
         ])
     ),
-    url(r'^(?P<education_group_year_id>[0-9]+)/', include([
-        url(r'^informations/edit/$', education_group.education_group_year_pedagogy_edit,
-            name="education_group_pedagogy_edit"),
-    ])),
     url(r'^(?P<offer_id>[0-9]+)/(?P<education_group_year_id>[0-9]+)/', include([
         url(r'^update/$', update.update_education_group, name="update_education_group"),
         url(r'^skills_achievements/', include(urlpatterns_achievement)),
@@ -121,5 +117,7 @@ urlpatterns = [
                 EducationGroupPublicationContactDeleteView.as_view(),
                 name="publication_contact_delete"),
         ])),
+       url(r'^informations/edit/$', education_group.education_group_year_pedagogy_edit,
+           name="education_group_pedagogy_edit"),
     ])),
 ] + education_group_urls.urlpatterns

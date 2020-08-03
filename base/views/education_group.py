@@ -48,7 +48,9 @@ from education_group.ddd.domain.service.identity_search import TrainingIdentityS
 from education_group.views.proxy.read import Tab
 from osis_common.decorators.ajax import ajax_required
 from program_management.ddd.domain.node import Node
-from program_management.ddd.repositories import load_tree
+from program_management.models.element import Element
+from program_management.ddd.service.read.search_all_versions_from_root_nodes import search_all_versions_from_root_nodes
+import program_management.ddd.command
 
 
 def education_group_year_pedagogy_edit_post(request, node: Node):
@@ -115,14 +117,22 @@ def education_group_year_pedagogy_edit_get(request, node: Node):
         label=label_name,
         language=get_user_interface_language(request.user)
     )
+    context.update({'url_action': reverse('education_group_pedagogy_edit',
+                                          args=[node.year, node.code]) + "?path={}".format(
+        get_path(request, node.year, node.code))})
     return render(request, 'education_group/blocks/modal/modal_pedagogy_edit_inner.html', context)
 
 
 @login_required
 @require_http_methods(['GET', 'POST'])
 @can_change_general_information
-def education_group_year_pedagogy_edit(request, education_group_year_id: int):
-    tree = load_tree.load(education_group_year_id)
+def education_group_year_pedagogy_edit(request, year: int, code: str):
+    commands = [
+        program_management.ddd.command.SearchAllVersionsFromRootNodesCommand(code=code,
+                                                                             year=year)
+    ]
+    trees = search_all_versions_from_root_nodes(commands)
+    tree = trees[0].get_tree()
     node = tree.root_node
     if request.method == 'POST':
         return education_group_year_pedagogy_edit_post(request, node)
@@ -323,3 +333,14 @@ def education_group_year_admission_condition_tab_lang_edit(request, year: int, c
     cache.set(get_tab_lang_keys(request.user), language, timeout=CACHE_TIMEOUT)
     training_identity = TrainingIdentitySearch().get_from_education_group_year_id(education_group_year.id)
     return redirect(_get_admission_condition_success_url(training_identity.year, training_identity.acronym))
+
+
+def get_path(request, year: int, code: str):
+    path = request.GET.get('path')
+    if path is None:
+        root_element = Element.objects.get(
+            group_year__academic_year__year=year,
+            group_year__partial_acronym=code
+        )
+        path = str(root_element.pk)
+    return path

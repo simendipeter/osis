@@ -30,7 +30,8 @@ from base.models.education_group_year import EducationGroupYear
 from base.models.enums.education_group_types import GroupType
 from cms.models import translated_text
 from osis_role.errors import get_permission_error
-from program_management.ddd.repositories import load_tree
+from program_management.ddd.service.read.search_all_versions_from_root_nodes import search_all_versions_from_root_nodes
+import program_management.ddd.command
 
 
 def can_change_education_group(user, education_group):
@@ -42,7 +43,12 @@ def can_change_education_group(user, education_group):
 
 def can_change_general_information(view_func):
     def f_can_change_general_information(request, *args, **kwargs):
-        tree = load_tree.load(kwargs['education_group_year_id'])
+        commands = [
+            program_management.ddd.command.SearchAllVersionsFromRootNodesCommand(code=kwargs['code'],
+                                                                                 year=kwargs['year'])
+        ]
+        trees = search_all_versions_from_root_nodes(commands)
+        tree = trees[0].get_tree()
         node = tree.root_node
         obj = translated_text.get_groups_or_offers_cms_reference_object(node)
         perm_name = 'base.change_commonpedagogyinformation' \
