@@ -72,7 +72,7 @@ class TestCommonGeneralInformation(TestCase):
 
         self.assertEqual(response.context['object'], self.common_education_group_year)
         expected_update_url = reverse('education_group_pedagogy_edit', args=[
-            self.common_education_group_year.pk
+            self.common_education_group_year.academic_year.year, self.common_education_group_year.partial_acronym
         ])
         self.assertEqual(response.context['update_label_url'], expected_update_url)
 

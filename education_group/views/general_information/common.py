@@ -78,4 +78,7 @@ class CommonGeneralInformation(PermissionRequiredMixin, TemplateView):
 
     def get_update_label_url(self):
         offer_id = self.get_object().pk
-        return reverse('education_group_pedagogy_edit', args=[offer_id])
+        return reverse('education_group_pedagogy_edit', args=[
+            self.get_object().academic_year.year,
+            self.get_object().partial_acronym,
+        ])
