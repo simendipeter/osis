@@ -147,7 +147,7 @@ class Element(models.Model):
 
         if not any([self.group_year, self.learning_class_year, self.learning_unit_year]):
             raise AttributeError(
-                _('At least an education group year, a group year, a learning unit year or a learning class year has '
+                _('At least a group year, a learning unit year or a learning class year has '
                   'to be set')
             )
         resulted_counter = Counter([self.group_year,
