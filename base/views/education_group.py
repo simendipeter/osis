@@ -48,10 +48,7 @@ from education_group.ddd.domain.service.identity_search import TrainingIdentityS
 from education_group.views.proxy.read import Tab
 from osis_common.decorators.ajax import ajax_required
 from program_management.ddd.domain.node import Node
-from program_management.ddd.domain.service.identity_search import ProgramTreeVersionIdentitySearch
-from program_management.ddd.domain.node import NodeIdentity
 from program_management.models.element import Element
-from program_management.ddd.repositories.program_tree_version import ProgramTreeVersionRepository
 from program_management.ddd.service.read.search_all_versions_from_root_nodes import search_all_versions_from_root_nodes
 import program_management.ddd.command
 
