@@ -43,7 +43,6 @@ def can_change_education_group(user, education_group):
 
 def can_change_general_information(view_func):
     def f_can_change_general_information(request, *args, **kwargs):
-        # tree = load_tree.load(kwargs['education_group_year_id'])
         commands = [
             program_management.ddd.command.SearchAllVersionsFromRootNodesCommand(code=kwargs['code'],
                                                                                  year=kwargs['year'])

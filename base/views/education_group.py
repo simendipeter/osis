@@ -82,7 +82,7 @@ def education_group_year_pedagogy_edit_post(request, node: Node):
     return redirect(redirect_url)
 
 
-def education_group_year_pedagogy_edit_get(request, node: Node, year: int, code: str):
+def education_group_year_pedagogy_edit_get(request, node: Node):
     obj = translated_text.get_groups_or_offers_cms_reference_object(node)
     entity = entity_name.get_offers_or_groups_entity_from_node(node)
     context = {
@@ -119,7 +119,7 @@ def education_group_year_pedagogy_edit_get(request, node: Node, year: int, code:
     )
     context.update({'url_action': reverse('education_group_pedagogy_edit',
                                           args=[node.year, node.code]) + "?path={}".format(
-        get_path(request, year, code))})
+        get_path(request, node.year, node.code))})
     return render(request, 'education_group/blocks/modal/modal_pedagogy_edit_inner.html', context)
 
 
@@ -136,7 +136,7 @@ def education_group_year_pedagogy_edit(request, year: int, code: str):
     node = tree.root_node
     if request.method == 'POST':
         return education_group_year_pedagogy_edit_post(request, node)
-    return education_group_year_pedagogy_edit_get(request, node, year, code)
+    return education_group_year_pedagogy_edit_get(request, node)
 
 
 @login_required
