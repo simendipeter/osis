@@ -51,7 +51,7 @@ class TestElementSave(TestCase):
 
         with self.assertRaisesMessage(
                 AttributeError,
-                _('At least an education group year, a group year, a learning unit year or a learning class year '
+                _('At least a group year, a learning unit year or a learning class year '
                   'has to be set')):
             element = ElementFactory()
             element.save()
