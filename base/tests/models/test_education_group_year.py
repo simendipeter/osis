@@ -25,6 +25,7 @@
 ##############################################################################
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.test import TestCase, override_settings
 from django.utils.translation import gettext_lazy as _
 
@@ -265,6 +266,13 @@ class EducationGroupYearTest(TestCase):
     @override_settings(LANGUAGES=[('en', 'English'), ], LANGUAGE_CODE='en')
     def test_verbose_title_en_partial_title_empty(self):
         self.assertEqual(self.education_group_year_MD_no_partial_title.verbose_title, "")
+
+    def test_unique_on_acronym_academic_year(self):
+        EducationGroupYearFactory(acronym="BOR1BA",
+                                  academic_year=self.academic_year)
+        with self.assertRaises(IntegrityError):
+            EducationGroupYearFactory(acronym="BOR1BA",
+                                      academic_year=self.academic_year)
 
 
 class EducationGroupYearCleanTest(TestCase):
