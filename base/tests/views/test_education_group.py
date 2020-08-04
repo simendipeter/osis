@@ -142,8 +142,7 @@ class EducationGroupPedagogyUpdateViewTestCase(TestCase):
         response = self.client.post(self.url, data={})
         self.assertEqual(response.status_code, HttpResponseRedirect.status_code)
 
-    @mock.patch("django.contrib.auth.models.User.has_perm", return_value=True)
-    def test_education_group_year_pedagogy_edit_post(self, mock_perms):
+    def test_education_group_year_pedagogy_edit_post(self):
         post_data = {'label': 'welcome_introduction', 'text_french': 'Salut', 'text_english': 'Hello'}
 
         response = self.client.post(self.url, data=post_data)
