@@ -275,16 +275,30 @@ class EducationGroupYearTest(TestCase):
                                       academic_year=self.academic_year)
 
 
+@override_settings(YEAR_LIMIT_EDG_MODIFICATION=2016)
 class EducationGroupYearCleanTest(TestCase):
+    def setUp(self):
+        self.academic_year = AcademicYearFactory(year=2017)
+
     def test_clean_constraint_both_value_set_case_no_errors(self):
-        e = EducationGroupYearFactory(min_constraint=12, max_constraint=20, constraint_type=CREDITS)
+        e = EducationGroupYearFactory(
+            min_constraint=12,
+            max_constraint=20,
+            constraint_type=CREDITS,
+            academic_year=self.academic_year,
+        )
         try:
             e.clean()
         except ValidationError:
             self.fail()
 
     def test_clean_constraint_only_one_value_set_case_no_errors(self):
-        e = EducationGroupYearFactory(min_constraint=12, max_constraint=None, constraint_type=CREDITS)
+        e = EducationGroupYearFactory(
+            min_constraint=12,
+            max_constraint=None,
+            constraint_type=CREDITS,
+            academic_year=self.academic_year,
+        )
         try:
             e.clean()
         except ValidationError:
@@ -432,13 +446,16 @@ class TestCleanAcronym(TestCase):
             e.clean_acronym(raise_warnings=True)
 
     def test_raise_validation_acronym_invalid(self):
-        random_acronym = string_generator()
+        acronyms = []
+        for acronym in range(0, 3):
+            acronyms.append(string_generator())
+
         external_ids = ['osis.education_group_type_2M180',
                         'osis.education_group_type_2M1',
                         'osis.education_group_type_3DP']
-        for ext_id in external_ids:
+        for idx, ext_id in enumerate(external_ids):
             with self.subTest(type=ext_id):
-                e = TrainingFactory(acronym=random_acronym,
+                e = TrainingFactory(acronym=acronyms[idx],
                                     academic_year=self.current_acy,
                                     education_group_type__external_id=ext_id)
                 with self.assertRaises(ValidationError):
