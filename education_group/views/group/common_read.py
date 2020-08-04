@@ -139,6 +139,9 @@ class GroupRead(PermissionRequiredMixin, ElementSelectedClipBoardMixin, Template
             "create_training_url": self.get_create_training_url(),
             "create_mini_training_url": self.get_create_mini_training_url(),
             "is_root_node": is_root_node,
+            "url_action": reverse(
+                'group_general_information_update', args=[self.node_identity.year, self.node_identity.code]
+            ) + "?path={}".format(self.get_path())
         }
 
     @functools.lru_cache()
