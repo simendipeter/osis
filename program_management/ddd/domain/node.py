@@ -117,14 +117,6 @@ class Node(interface.Entity):
     def __str__(self):
         return '%(code)s (%(year)s)' % {'code': self.code, 'year': self.year}
 
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.entity_id == other.entity_id
-        return False
-
-    def __hash__(self):
-        return hash(self.entity_id)
-
     @property
     def pk(self):
         return self.node_id
@@ -171,8 +163,8 @@ class Node(interface.Entity):
     def is_minor_major_list_choice(self) -> bool:
         return self.node_type in GroupType.minor_major_list_choice_enums()
 
-    def is_minor_major_list_choice(self) -> bool:
-        return self.node_type in GroupType.minor_major_list_choice_enums()
+    def is_minor_or_deepening(self) -> bool:
+        return self.node_type in MiniTrainingType.minors_and_deepening()
 
     def get_direct_child_as_node(self, node_id: 'NodeIdentity') -> 'Node':
         return next(node for node in self.get_direct_children_as_nodes() if node.entity_id == node_id)
@@ -355,7 +347,7 @@ def _get_descendents(root_node: Node, current_path: 'Path' = None) -> Dict['Path
     return _descendents
 
 
-# TODO: Remove this class because unused when migration is done
+# TODO: Remove this class because unused when migration is done.
 @attr.s(slots=True, hash=False)
 class NodeEducationGroupYear(Node):
 

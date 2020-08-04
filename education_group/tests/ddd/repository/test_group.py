@@ -188,6 +188,9 @@ class TestGroupRepositoryCreateMethod(TestCase):
         self.assertEqual(group_inserted.min_constraint, self.group.content_constraint.minimum)
         self.assertEqual(group_inserted.max_constraint, self.group.content_constraint.maximum)
 
+        self.assertEqual(group_inserted.remark_en, self.group.remark.text_en)
+        self.assertEqual(group_inserted.remark_fr, self.group.remark.text_fr)
+
         self.assertEqual(group_inserted.management_entity_id, self.management_entity_version.entity_id)
         self.assertEqual(group_inserted.academic_year_id, self.academic_year.pk)
         self.assertEqual(group_inserted.education_group_type_id, self.education_group_type.pk)
@@ -309,3 +312,15 @@ class TestGroupRepositoryUpdateMethod(TestCase):
         self.assertEqual(group.content_constraint.maximum, self.group_year_db.max_constraint)
         self.assertEqual(group.remark.text_fr, self.group_year_db.remark_fr)
         self.assertEqual(group.remark.text_en, self.group_year_db.remark_en)
+
+
+class TestGroupRepositoryDeleteMethod(TestCase):
+    def setUp(self) -> None:
+        self.group_year_db = GroupYearFactory()
+
+    def test_assert_delete_in_database(self):
+        group_id = GroupIdentity(code=self.group_year_db.partial_acronym, year=self.group_year_db.academic_year.year)
+        GroupRepository.delete(group_id)
+
+        with self.assertRaises(GroupYearModelDb.DoesNotExist):
+            GroupYearModelDb.objects.get(partial_acronym=group_id.code, academic_year__year=group_id.year)

@@ -124,6 +124,7 @@ class ProgramTreeBuilder:
                     child_title=generated_child_title,
                     parent_abbreviated_title=root_node.title
                 ),
+                start_year=root_node.year,
             )
             child._has_changed = True
             root_node.add_child(child, is_mandatory=True)
@@ -427,6 +428,20 @@ class ProgramTree(interface.RootEntity):
         return " ; ".join(
             [str(grp.block) for grp in self.get_links_using_node(node) if grp.block]
         )
+
+    def is_empty(self):
+        """
+        Check if tree is empty.
+        An empty tree is defined as a tree with other link than mandatory groups
+        """
+        nodes = self.get_all_nodes()
+        for node in nodes:
+            counter_direct_children = Counter(node.get_children_types(include_nodes_used_as_reference=True))
+            counter_mandatory_direct_children = Counter(self.get_ordered_mandatory_children_types(node))
+
+            if counter_direct_children - counter_mandatory_direct_children:
+                return False
+        return True
 
     def update_link(
             self,
