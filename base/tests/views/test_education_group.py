@@ -69,7 +69,7 @@ class EducationGroupPedagogyUpdateViewTestCase(TestCase):
             root_group__education_group_type=cls.training.education_group_type,
             root_group__partial_acronym=cls.training.partial_acronym
         )
-        element = ElementFactory(group_year=version.root_group)
+        cls.element = ElementFactory(group_year=version.root_group)
         cls.text_label = OfferTextLabelFactory(label='dummy-label')
         cls.translated_text_in_french = TranslatedTextRandomFactory(
             reference=str(cls.training.pk),
@@ -85,8 +85,8 @@ class EducationGroupPedagogyUpdateViewTestCase(TestCase):
         )
         cls.person = PersonFactory()
         cls.url = reverse("group_general_information_update", args=[
-            element.group_year.academic_year.year,
-            element.group_year.partial_acronym
+            cls.element.group_year.academic_year.year,
+            cls.element.group_year.partial_acronym
         ])
 
     def setUp(self):
@@ -142,12 +142,18 @@ class EducationGroupPedagogyUpdateViewTestCase(TestCase):
         response = self.client.post(self.url, data={})
         self.assertEqual(response.status_code, HttpResponseRedirect.status_code)
 
-    @mock.patch('education_group.auth.predicates.is_education_group_year_older_or_equals_than_limit_settings_year',
-                return_value=True)
-    def test_education_group_year_pedagogy_edit_post(self, mv):
+    def test_education_group_year_pedagogy_edit_post(self):
         post_data = {'label': 'welcome_introduction', 'text_french': 'Salut', 'text_english': 'Hello'}
 
-        response = self.client.post(self.url, data=post_data)
+        request = RequestFactory().post(self.url, data=post_data)
+
+        from base.views.education_group import education_group_year_pedagogy_edit_post
+        response = education_group_year_pedagogy_edit_post(request,
+                                                           args=[
+                                                               self.element.group_year.academic_year.year,
+                                                               self.element.group_year.partial_acronym
+                                                           ]
+                                                           )
 
         self.assertEqual(response.status_code, HttpResponseRedirect.status_code)
         anchor_expected = '#section_welcome_introduction'
