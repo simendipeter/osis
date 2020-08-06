@@ -6,7 +6,7 @@
 #    The core business involves the administration of students, teachers,
 #    courses, programs and so on.
 #
-#    Copyright (C) 2015-2020 Université catholique de Louvain (http://www.uclouvain.be)
+#    Copyright (C) 2015-2017 Université catholique de Louvain (http://www.uclouvain.be)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ from base.tests.factories.authorized_relationship import AuthorizedRelationshipF
 from base.tests.factories.education_group_year import EducationGroupYearFactory
 from base.tests.factories.group_element_year import GroupElementYearFactory
 from education_group.tests.factories.auth.central_manager import CentralManagerFactory
-from osis_role.contrib.views import PermissionRequiredMixin
 
 
 @override_flag('education_group_update', active=True)
@@ -84,11 +83,6 @@ class TestEdit(TestCase):
         self.mocked_perm = self.perm_patcher.start()
         self.addCleanup(self.perm_patcher.stop)
 
-        permission_patcher = mock.patch.object(PermissionRequiredMixin, "has_permission")
-        self.permission_mock = permission_patcher.start()
-        self.permission_mock.return_value = True
-        self.addCleanup(permission_patcher.stop)
-
     def test_edit_case_user_not_logged(self):
         self.client.logout()
         response = self.client.post(self.url, self.post_valid_data)
@@ -101,23 +95,17 @@ class TestEdit(TestCase):
         self.assertEqual(response.status_code, HttpResponseNotFound.status_code)
         self.assertTemplateUsed(response, "page_not_found.html")
 
-    @mock.patch('education_group.auth.predicates.is_education_group_year_older_or_equals_than_limit_settings_year',
-                return_value=True)
-    def test_edit_comment_get(self, mock_no_bypass_of_limit):
+    def test_edit_comment_get(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTemplateUsed(response, "group_element_year/group_element_year_comment_inner.html")
 
-    @mock.patch('education_group.auth.predicates.is_education_group_year_older_or_equals_than_limit_settings_year',
-                return_value=True)
-    def test_edit_comment_get_ajax(self, mock_no_bypass_of_limit):
+    def test_edit_comment_get_ajax(self):
         response = self.client.get(self.url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTemplateUsed(response, "group_element_year/group_element_year_comment_inner.html")
 
-    @mock.patch('education_group.auth.predicates.is_education_group_year_older_or_equals_than_limit_settings_year',
-                return_value=True)
-    def test_edit_comment_post(self, mock_no_bypass_of_limit):
+    def test_edit_comment_post(self):
         data = {
             "form-0-id": str(self.group_element_year.id),
             "form-0-comment":  """C'est une affaire dangereuse de passer ta porte, Frodon, 
