@@ -62,7 +62,6 @@ class EducationGroupPedagogyUpdateViewTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.current_academic_year = create_current_academic_year()
-        settings.YEAR_LIMIT_EDG_MODIFICATION = cls.current_academic_year.year
         cls.training = TrainingFactory(academic_year=cls.current_academic_year)
         version = StandardEducationGroupVersionFactory(
             offer=cls.training,
@@ -150,7 +149,6 @@ class EducationGroupPedagogyUpdateViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, HttpResponseRedirect.status_code)
         anchor_expected = '#section_welcome_introduction'
-        print(response.url)
         self.assertTrue(anchor_expected in response.url)
 
 
