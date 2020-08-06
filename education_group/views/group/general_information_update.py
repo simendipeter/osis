@@ -47,7 +47,9 @@ class GroupUpdateGeneralInformation(GroupRead):
         return EducationGroupPedagogyEditForm
 
     def post(self, request, *args, **kwargs):
+        print('post')
         if not self.have_general_information_tab():
+            print('if not')
             return redirect(
                 reverse('group_identification', kwargs=self.kwargs) + "?path={}".format(self.get_path())
             )
@@ -55,11 +57,14 @@ class GroupUpdateGeneralInformation(GroupRead):
         redirect_url = reverse('group_identification', kwargs=self.kwargs) + "?path={}".format(self.get_path())
 
         if form.is_valid():
+            print('is_valid')
             label = form.cleaned_data['label']
 
             self.update_cms(form, label)
 
             redirect_url += "#section_{label_name}".format(label_name=label)
+        else:
+            print('is_invalid')
         return redirect(redirect_url)
 
     def update_cms(self, form: EducationGroupPedagogyEditForm, label: str):

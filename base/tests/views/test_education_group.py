@@ -31,7 +31,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.http import HttpResponseForbidden, HttpResponseNotFound, HttpResponse, HttpResponseRedirect
-from django.test import TestCase, RequestFactory
+from django.test import TestCase, RequestFactory, override_settings
 from django.urls import reverse
 
 from base.business.education_groups.general_information import PublishException
@@ -142,6 +142,7 @@ class EducationGroupPedagogyUpdateViewTestCase(TestCase):
         response = self.client.post(self.url, data={})
         self.assertEqual(response.status_code, HttpResponseRedirect.status_code)
 
+    @override_settings(YEAR_LIMIT_EDG_MODIFICATION=1)
     def test_education_group_year_pedagogy_edit_post(self):
         post_data = {'label': 'welcome_introduction', 'text_french': 'Salut', 'text_english': 'Hello'}
 
