@@ -142,8 +142,9 @@ class EducationGroupPedagogyUpdateViewTestCase(TestCase):
         response = self.client.post(self.url, data={})
         self.assertEqual(response.status_code, HttpResponseRedirect.status_code)
 
-    @override_settings(YEAR_LIMIT_EDG_MODIFICATION=1)
-    def test_education_group_year_pedagogy_edit_post(self):
+    @mock.patch('education_group.auth.predicates.is_education_group_year_older_or_equals_than_limit_settings_year',
+                return_value=True)
+    def test_education_group_year_pedagogy_edit_post(self, mv):
         post_data = {'label': 'welcome_introduction', 'text_french': 'Salut', 'text_english': 'Hello'}
 
         response = self.client.post(self.url, data=post_data)
