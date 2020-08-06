@@ -6,7 +6,7 @@
 #    The core business involves the administration of students, teachers,
 #    courses, programs and so on.
 #
-#    Copyright (C) 2015-2017 Université catholique de Louvain (http://www.uclouvain.be)
+#    Copyright (C) 2015-2020 Université catholique de Louvain (http://www.uclouvain.be)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -105,7 +105,9 @@ class TestEdit(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTemplateUsed(response, "group_element_year/group_element_year_comment_inner.html")
 
-    def test_edit_comment_post(self):
+    @mock.patch('education_group.auth.predicates.is_education_group_year_older_or_equals_than_limit_settings_year',
+                return_value=True)
+    def test_edit_comment_post(self, mock_no_bypass_of_limit):
         data = {
             "form-0-id": str(self.group_element_year.id),
             "form-0-comment":  """C'est une affaire dangereuse de passer ta porte, Frodon, 
