@@ -375,6 +375,9 @@ def create_prerequisites(copy_to_year: int) -> int:
             prerequisite.education_group_year = new_education_group_year
             prerequisite.save()
             for item in prerequisite.prerequisiteitem_set.all():
+                item.id = None
+                item.pk = None
+                item.external_id = None
                 item.prerequisite = prerequisite
                 item.save()
                 if VERBOSITY:
