@@ -9,6 +9,7 @@ import dotenv
 from django.db import models, IntegrityError
 from django.db.models import Subquery, Q
 
+
 base_dir = os.path.dirname(os.path.abspath(__file__))
 dotenv.read_dotenv(os.path.join(base_dir, '.env'))
 settings_file = os.environ.get('DJANGO_SETTINGS_MODULE', 'backoffice.settings.local')
@@ -34,6 +35,8 @@ if os.environ.get('DJANGO_SETTINGS_MODULE'):
     from cms.models.translated_text import TranslatedText
     from base.models.prerequisite import Prerequisite
     from base.models.enums import education_group_categories
+    from base.models.education_group import EducationGroup
+
 
 VERBOSITY = False
 LOGGING = True
@@ -248,8 +251,7 @@ def copy_to_old_model(from_year: int):
     if VERBOSITY:
         print("End copy to old model")
     print('Copying to old model time:', total_time)
-    print(result['created'], 'links created on a total of', result['total'])
-    print(result['total'] - result['created'], 'links not created')
+    return result
 
 
 def get_next_learning_unit_year(child_leaf: LearningUnitYear, copy_to_year: AcademicYear):
@@ -307,10 +309,12 @@ def get_next_education_group_year(old_education_group_year: EducationGroupYear,
 def copy_link_to_next_year(copy_to_year: AcademicYear) -> dict:
     geys = GroupElementYear.objects.filter(
         Q(parent__education_group__end_year__isnull=True)
-        | Q(parent__education_group__end_year__year__gte=copy_to_year.year),
+        | (Q(parent__education_group_type__category=education_group_categories.GROUP)
+           | Q(parent__education_group__end_year__year__gte=copy_to_year.year)),
         (Q(child_branch__isnull=True)
          | Q(child_branch__education_group__end_year__isnull=True)
-         | Q(child_branch__education_group__end_year__year__gte=copy_to_year.year)) |
+         | (Q(child_branch__education_group_type__category=education_group_categories.GROUP)
+            | Q(child_branch__education_group__end_year__year__gte=copy_to_year.year))) |
         (Q(child_leaf__isnull=True)
          | Q(child_leaf__learning_unit__end_year__isnull=True)
          | Q(child_leaf__learning_unit__end_year__year__gte=copy_to_year.year)),
@@ -341,35 +345,50 @@ def copy_link_to_next_year(copy_to_year: AcademicYear) -> dict:
             write_logging_file(msg, 'LINK')
         if VERBOSITY:
             print('\t\t', msg) if msg else print('\t\t', gey)
-        if not msg:
-            create_prerequisites(old_leaf, gey.child_leaf, copy_to_year)
-    return {'created': links_created, 'total': len(geys)}
+
+    return {
+        'created': links_created,
+        'total': len(geys),
+        'percentage': (links_created/len(geys)*100)
+    }
 
 
-def create_prerequisites(old_learning_unit_year: LearningUnitYear,
-                         new_learning_unit_year: LearningUnitYear,
-                         copy_to_year: AcademicYear):
-
-    prerequisites = Prerequisite.objects.filter(learning_unit_year=old_learning_unit_year)\
-        .prefetch_related('prerequisiteitem_set')
+def create_prerequisites(copy_to_year: int) -> int:
+    prerequisites_created = 0
+    prerequisites = Prerequisite.objects.filter(
+        learning_unit_year__academic_year__year=copy_to_year-1,
+        education_group_year__academic_year__year=copy_to_year-1
+    ).prefetch_related('prerequisiteitem_set')
     for prerequisite in prerequisites:
         try:
+            new_learning_unit_year = LearningUnitYear.objects.get(
+                learning_unit=prerequisite.learning_unit_year.learning_unit,
+                academic_year__year=copy_to_year
+            )
+            new_education_group_year = EducationGroupYear.objects.get(
+                education_group=prerequisite.education_group_year.education_group,
+                academic_year__year=copy_to_year
+            )
             prerequisite.id = None
             prerequisite.pk = None
             prerequisite.external_id = None
             prerequisite.learning_unit_year = new_learning_unit_year
-            prerequisite.education_group_year = EducationGroupYear.objects.get(
-                education_group=prerequisite.education_group_year.education_group,
-                academic_year=copy_to_year
-            )
+            prerequisite.education_group_year = new_education_group_year
+            prerequisite.save()
             for item in prerequisite.prerequisiteitem_set.all():
                 item.prerequisite = prerequisite
                 item.save()
                 if VERBOSITY:
                     print('\t\t', item.learning_unit)
                     print('\t\t', item.prerequisite)
-        except: # TODO correct except clause
-            write_logging_file('Error prerequisite', 'PREREQUISITE')
+            prerequisites_created += 1
+        except Exception as e:  # TODO correct except clause
+            write_logging_file(e, 'PREREQUISITE')
+    return {
+        'created': prerequisites_created,
+        'total': len(prerequisites),
+        'percentage': (prerequisites_created/len(prerequisites)*100)
+    }
 
 
 def delete_data_from_learning_unit_year(luy: LearningUnitYear):
@@ -408,6 +427,21 @@ def delete_data_from_education_group_year(egy: EducationGroupYear):
     admission_list.delete()
 
 
+def delete_prerequisites(year_to_delete: int):
+    prerequisites = Prerequisite.objects.filter(
+        learning_unit_year__academic_year__year=year_to_delete
+    ).prefetch_related('prerequisiteitem_set')
+    try:
+        for prerequisite in prerequisites:
+            prerequisite.prerequisiteitem_set.delete()
+    except Exception as e:
+        write_logging_file(e, 'PREREQUISITEITEMS')
+    try:
+        prerequisites.delete()
+    except Exception as e:
+        write_logging_file(e, 'PREREQUISITE')
+
+
 def delete_links_old_model(year_to_delete: int):
     if VERBOSITY:
         print('Start delete link')
@@ -428,6 +462,16 @@ def delete_links_old_model(year_to_delete: int):
         print(len(geys), 'links deleted.')
 
 
+def correct_end_date_education_group_type_groups(year: int):
+    try:
+        EducationGroup.objects.filter(
+            educationgroupyear__education_group_type__category=education_group_categories.GROUP,
+            educationgroupyear__academic_year__year=year
+        ).update(end_year=None)
+    except Exception as e:
+        write_logging_file(e, 'UPDATE')
+
+
 if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser(description="Copy program from 'year' to 'year + 1'")
@@ -436,21 +480,33 @@ if __name__ == '__main__':
         group.add_argument("-n", "--new_model", help="copy only in new model (not working at this moment)",
                            action="store_true")
         group.add_argument("-o", "--old_model", help="copy only in old model", action="store_true")
+        group.add_argument("-p", "--prerequisite", help="copy prerequisites", action="store_true")
         parser.add_argument("-d", "--delete", help="delete old link", action="store_true")
+        parser.add_argument("-u", "--update_education_group", help="update end year of education groups",
+                            action="store_true")
         parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
         parser.add_argument("year", help="year to copy", type=int)
         args = parser.parse_args()
         start_time = datetime.datetime.now()
         year = args.year
+        to_year = year + 1
+        print(year, 'to', to_year)
         if LOGGING:
             LOGGING_FILE = open('error_copy.log', 'w+')
         if args.verbose:
             VERBOSITY = args.verbose
             print("verbosity turned on")
         if args.all or args.delete:
-            delete_links_old_model(year+1)
+            delete_links_old_model(to_year)
+            delete_prerequisites(to_year)
         if args.all or args.old_model:
-            copy_to_old_model(year)
+            link_created = copy_to_old_model(year)
+            print('Links successfully copied : {}%'.format(link_created['percentage']))
+        if args.all or args.old_model or args.prerequisite:
+            preq_created = create_prerequisites(to_year)
+            print('Prerequisites successfully copied : {}%'.format(preq_created['percentage']))
+        if args.update_education_group:
+            correct_end_date_education_group_type_groups(year)
         if args.new_model:
             print('Not implemented yet')
         end_time = datetime.datetime.now()
