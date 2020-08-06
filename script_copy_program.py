@@ -244,7 +244,6 @@ def copy_to_old_model(from_year: int):
     new_year = year.next()
     if VERBOSITY:
         print("Start copy to old model")
-    print(year, 'to', new_year)
     result = copy_link_to_next_year(new_year)
     end_time = datetime.datetime.now()
     total_time = end_time - start_time
