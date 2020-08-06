@@ -384,7 +384,7 @@ def create_prerequisites(copy_to_year: int) -> int:
                     print('\t\t', item.learning_unit)
                     print('\t\t', item.prerequisite)
             prerequisites_created += 1
-        except Exception as e:  # TODO correct except clause
+        except Exception as e:
             write_logging_file(e, 'PREREQUISITE')
     return {
         'created': prerequisites_created,
@@ -393,40 +393,50 @@ def create_prerequisites(copy_to_year: int) -> int:
     }
 
 
+def delete_from_queryset(queries):
+    for query in queries:
+        for elem in query:
+            elem.delete()
+
+
 def delete_data_from_learning_unit_year(luy: LearningUnitYear):
-    LearningAchievement.objects.filter(learning_unit_year=luy).delete()
-    LearningComponentYear.objects.filter(learning_unit_year=luy).delete()
-    LearningUnitEnrollment.objects.filter(learning_unit_year=luy).delete()
-    TranslatedText.objects.filter(
+    queries = []
+    queries.append(LearningAchievement.objects.filter(learning_unit_year=luy))
+    queries.append(LearningComponentYear.objects.filter(learning_unit_year=luy))
+    queries.append(LearningUnitEnrollment.objects.filter(learning_unit_year=luy))
+    queries.append(TranslatedText.objects.filter(
         entity=LEARNING_UNIT_YEAR,
         reference=Subquery(
             LearningUnitYear.objects.filter(
                 pk=luy.pk
             ).values('id')[:1]
         )
-    ).delete()
+    ))
+    delete_from_queryset(queries)
 
 
 def delete_data_from_education_group_year(egy: EducationGroupYear):
-    EducationGroupYearDomain.objects.filter(education_group_year=egy).delete()
-    EducationGroupLanguage.objects.filter(education_group_year=egy).delete()
-    EducationGroupCertificateAim.objects.filter(education_group_year=egy).delete()
-    EducationGroupOrganization.objects.filter(education_group_year=egy).delete()
-    EducationGroupPublicationContact.objects.filter(education_group_year=egy).delete()
-    TranslatedText.objects.filter(
+    queries = []
+    queries.append(EducationGroupYearDomain.objects.filter(education_group_year=egy))
+    queries.append(EducationGroupLanguage.objects.filter(education_group_year=egy))
+    queries.append(EducationGroupCertificateAim.objects.filter(education_group_year=egy))
+    queries.append(EducationGroupOrganization.objects.filter(education_group_year=egy))
+    queries.append(EducationGroupPublicationContact.objects.filter(education_group_year=egy))
+    queries.append(TranslatedText.objects.filter(
         entity=OFFER_YEAR,
         reference=Subquery(
             EducationGroupYear.objects.filter(
                 pk=egy.pk
             ).values('id')[:1]
         )
-    ).delete()
+    ))
     old_egy_achievements = EducationGroupAchievement.objects.filter(education_group_year=egy)
-    EducationGroupDetailedAchievement.objects.filter(education_group_achievement__in=old_egy_achievements).delete()
-    old_egy_achievements.delete()
+    queries.append(EducationGroupDetailedAchievement.objects.filter(education_group_achievement__in=old_egy_achievements))
+    queries.append(old_egy_achievements)
     admission_list = AdmissionCondition.objects.filter(education_group_year=egy)
-    AdmissionConditionLine.objects.filter(admission_condition__in=admission_list).delete()
-    admission_list.delete()
+    queries.append(AdmissionConditionLine.objects.filter(admission_condition__in=admission_list))
+    queries.append(admission_list)
+    delete_from_queryset(queries)
 
 
 def delete_prerequisites(year_to_delete: int):
