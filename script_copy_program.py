@@ -433,7 +433,7 @@ def delete_prerequisites(year_to_delete: int):
     ).prefetch_related('prerequisiteitem_set')
     try:
         for prerequisite in prerequisites:
-            prerequisite.prerequisiteitem_set.delete()
+            prerequisite.prerequisiteitem_set.all().delete()
     except Exception as e:
         write_logging_file(e, 'PREREQUISITEITEMS')
     try:
