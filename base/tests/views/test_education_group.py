@@ -62,6 +62,7 @@ class EducationGroupPedagogyUpdateViewTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.current_academic_year = create_current_academic_year()
+        settings.YEAR_LIMIT_EDG_MODIFICATION = cls.current_academic_year.year
         cls.training = TrainingFactory(academic_year=cls.current_academic_year)
         version = StandardEducationGroupVersionFactory(
             offer=cls.training,
