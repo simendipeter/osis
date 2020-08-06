@@ -60,7 +60,6 @@ class GroupUpdateGeneralInformation(GroupRead):
             self.update_cms(form, label)
 
             redirect_url += "#section_{label_name}".format(label_name=label)
-
         return redirect(redirect_url)
 
     def update_cms(self, form: EducationGroupPedagogyEditForm, label: str):
