@@ -459,14 +459,13 @@ def delete_prerequisites(year_to_delete: int):
 def delete_links_old_model(year_to_delete: int):
     if VERBOSITY:
         print('Start delete link')
-    geys = GroupElementYear.objects.filter(Q(child_leaf__academic_year__year=year_to_delete)
-                                           | Q(child_branch__academic_year__year=year_to_delete))
+    geys = GroupElementYear.objects.filter(parent__academic_year__year=year_to_delete)
     for gey in geys:
         msg = 'Link between {} and {} deleted'.format(gey.parent, gey.child_branch or gey.child_leaf)
         delete_data_from_education_group_year(gey.parent)
         if gey.child_branch:
             delete_data_from_education_group_year(gey.child_branch)
-        if gey.child_leaf:
+        if gey.child_leaf and gey.child_leaf.academic_year.year == year_to_delete:
             delete_data_from_learning_unit_year(gey.child_leaf)
         gey.delete()
         if VERBOSITY:
