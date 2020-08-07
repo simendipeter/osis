@@ -254,6 +254,8 @@ def copy_to_old_model(from_year: int):
 
 
 def get_next_learning_unit_year(child_leaf: LearningUnitYear, copy_to_year: AcademicYear):
+    if child_leaf.academic_year.year < copy_to_year.year - 1:
+        return child_leaf
     try:
         luy = LearningUnitYear.objects.get(learning_unit=child_leaf.learning_unit, academic_year=copy_to_year)
         copy_luy_to_next_year = CopyLuyOldModel(child_leaf, luy)
